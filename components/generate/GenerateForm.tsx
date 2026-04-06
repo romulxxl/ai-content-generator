@@ -87,11 +87,23 @@ export default function GenerateForm() {
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
+      let fullResult = ''
 
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
-        setResult((prev) => prev + decoder.decode(value, { stream: true }))
+        const chunk = decoder.decode(value, { stream: true })
+        fullResult += chunk
+        setResult((prev) => prev + chunk)
+      }
+
+      // Save to history after generation completes
+      if (fullResult) {
+        await fetch('/api/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contentType, inputs: forms[contentType], result: fullResult }),
+        })
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed. Please try again.')

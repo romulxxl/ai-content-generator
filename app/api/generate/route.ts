@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     async start(controller) {
       try {
         const messageStream = anthropic.messages.stream({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 1500,
           system: 'You write clean, plain text content. Never use markdown formatting: no # headers, no ** or * for bold/italic, no _ underscores, no bullet dashes unless explicitly part of a list structure. To emphasize text, use double quotes. Keep the output minimal and readable.',
           messages: [{ role: 'user', content: prompt }],
