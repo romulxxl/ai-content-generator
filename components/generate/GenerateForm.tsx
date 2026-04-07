@@ -7,32 +7,32 @@ import ResultDisplay from './ResultDisplay'
 import type { ContentType, ContentInputs } from '@/lib/prompts'
 
 const CONTENT_TYPES: { value: ContentType; label: string; description: string }[] = [
-  { value: 'product_description', label: 'Product Description', description: 'Compelling copy for your product' },
-  { value: 'blog_post_outline', label: 'Blog Post Outline', description: 'Structured outline for your article' },
-  { value: 'email_subject_lines', label: 'Email Subject Lines', description: 'Generate 5 high-converting options' },
-  { value: 'social_media_caption', label: 'Social Media Caption', description: 'Platform-optimised captions' },
+  { value: 'product_description',  label: 'Product Description', description: 'sales-ready copy for product pages & landing pages' },
+  { value: 'blog_post_outline',    label: 'Blog Blueprint',      description: 'structured article plan from headline to conclusion' },
+  { value: 'email_composer',       label: 'Email Composer',      description: 'complete email for any business or marketing goal' },
+  { value: 'social_media_caption', label: 'Social Post',         description: 'ready-to-publish posts for any social media platform' },
 ]
 
 type ProductDescriptionForm = { productName: string; keyFeatures: string[]; tone: 'formal' | 'casual' | 'playful' | 'authoritative' | 'urgent' | 'empathetic' | 'minimalist' }
-type BlogPostForm = { topic: string; targetAudience: string; desiredLength: 'short' | 'medium' | 'long' }
-type EmailSubjectForm = { campaignGoal: string; productName: string }
-type SocialMediaForm = { platform: 'instagram' | 'linkedin' | 'twitter'; topic: string; tone: 'professional' | 'casual' | 'fun' }
+type BlogPostForm           = { topic: string; targetAudience: string; desiredLength: 'short' | 'medium' | 'long' }
+type EmailForm              = { companyName: string; emailPurpose: string; emailStyle: 'formal' | 'friendly' | 'persuasive' | 'direct' | 'empathetic'; emailLength: 'brief' | 'standard' | 'detailed'; keyPoints: string[] }
+type SocialMediaForm        = { platform: 'instagram' | 'linkedin' | 'twitter' | 'facebook'; topic: string; tone: 'professional' | 'casual' | 'fun'; wordCount: 'micro' | 'short' | 'medium' | 'long' }
 
 type AllForms = {
-  product_description: ProductDescriptionForm
-  blog_post_outline: BlogPostForm
-  email_subject_lines: EmailSubjectForm
+  product_description:  ProductDescriptionForm
+  blog_post_outline:    BlogPostForm
+  email_composer:       EmailForm
   social_media_caption: SocialMediaForm
 }
 
 const initialForms: AllForms = {
-  product_description: { productName: '', keyFeatures: [], tone: 'formal' },
-  blog_post_outline: { topic: '', targetAudience: '', desiredLength: 'medium' },
-  email_subject_lines: { campaignGoal: '', productName: '' },
-  social_media_caption: { platform: 'instagram', topic: '', tone: 'casual' },
+  product_description:  { productName: '', keyFeatures: [], tone: 'formal' },
+  blog_post_outline:    { topic: '', targetAudience: '', desiredLength: 'medium' },
+  email_composer:       { companyName: '', emailPurpose: '', emailStyle: 'formal', emailLength: 'standard', keyPoints: [] },
+  social_media_caption: { platform: 'instagram', topic: '', tone: 'casual', wordCount: 'short' },
 }
 
-const inputCls = 'w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition'
+const inputCls  = 'w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition'
 const selectCls = 'w-full appearance-none px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white transition'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -97,7 +97,6 @@ export default function GenerateForm() {
         setResult((prev) => prev + chunk)
       }
 
-      // Save to history after generation completes
       if (fullResult) {
         await fetch('/api/history', {
           method: 'POST',
@@ -134,6 +133,7 @@ export default function GenerateForm() {
           </SelectWrapper>
         </Field>
 
+        {/* ── Product Description ── */}
         {contentType === 'product_description' && (
           <>
             <Field label="Product Name">
@@ -150,7 +150,7 @@ export default function GenerateForm() {
             <Field label="Tone">
               <SelectWrapper>
                 <select value={forms.product_description.tone}
-                  onChange={(e) => update('product_description', { tone: e.target.value as 'formal' | 'casual' | 'playful' })}
+                  onChange={(e) => update('product_description', { tone: e.target.value as ProductDescriptionForm['tone'] })}
                   className={selectCls}>
                   <option value="formal">Formal</option>
                   <option value="casual">Casual</option>
@@ -165,6 +165,7 @@ export default function GenerateForm() {
           </>
         )}
 
+        {/* ── Blog Blueprint ── */}
         {contentType === 'blog_post_outline' && (
           <>
             <Field label="Topic">
@@ -180,7 +181,7 @@ export default function GenerateForm() {
             <Field label="Desired Length">
               <SelectWrapper>
                 <select value={forms.blog_post_outline.desiredLength}
-                  onChange={(e) => update('blog_post_outline', { desiredLength: e.target.value as 'short' | 'medium' | 'long' })}
+                  onChange={(e) => update('blog_post_outline', { desiredLength: e.target.value as BlogPostForm['desiredLength'] })}
                   className={selectCls}>
                   <option value="short">Short (5-7 sections)</option>
                   <option value="medium">Medium (7-10 sections)</option>
@@ -191,31 +192,75 @@ export default function GenerateForm() {
           </>
         )}
 
-        {contentType === 'email_subject_lines' && (
+        {/* ── Email Composer ── */}
+        {contentType === 'email_composer' && (
           <>
-            <Field label="Campaign Goal">
-              <input type="text" value={forms.email_subject_lines.campaignGoal}
-                onChange={(e) => update('email_subject_lines', { campaignGoal: e.target.value })}
-                className={inputCls} placeholder="e.g. Drive Black Friday sales, re-engage inactive users" />
+            <Field label="Company / Sender Name">
+              <input type="text" value={forms.email_composer.companyName}
+                onChange={(e) => update('email_composer', { companyName: e.target.value })}
+                className={inputCls} placeholder="e.g. Acme Corp, John from Support" />
             </Field>
-            <Field label="Product / Service Name">
-              <input type="text" value={forms.email_subject_lines.productName}
-                onChange={(e) => update('email_subject_lines', { productName: e.target.value })}
-                className={inputCls} placeholder="e.g. CloudSync Pro" />
+            <Field label="Email Purpose">
+              <input type="text" value={forms.email_composer.emailPurpose}
+                onChange={(e) => update('email_composer', { emailPurpose: e.target.value })}
+                className={inputCls} placeholder="e.g. Invite to a product demo, announce a pricing change" />
+            </Field>
+            <Field label="Style">
+              <SelectWrapper>
+                <select value={forms.email_composer.emailStyle}
+                  onChange={(e) => update('email_composer', { emailStyle: e.target.value as EmailForm['emailStyle'] })}
+                  className={selectCls}>
+                  <option value="formal">Formal — precise & professional</option>
+                  <option value="friendly">Friendly — warm & approachable</option>
+                  <option value="persuasive">Persuasive — benefit-focused, action-driving</option>
+                  <option value="direct">Direct — straight to the point</option>
+                  <option value="empathetic">Empathetic — understanding & supportive</option>
+                </select>
+              </SelectWrapper>
+            </Field>
+            <Field label="Email Length">
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { value: 'brief',    label: 'Brief',    hint: '100–180 words' },
+                    { value: 'standard', label: 'Standard', hint: '200–350 words' },
+                    { value: 'detailed', label: 'Detailed', hint: '400–600 words' },
+                  ] as const
+                ).map(({ value, label, hint }) => (
+                  <button key={value} type="button"
+                    onClick={() => update('email_composer', { emailLength: value })}
+                    className={`px-3 py-2.5 rounded-lg border text-left transition ${
+                      forms.email_composer.emailLength === value
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}>
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <Field label="Key Points to Highlight (press Enter or comma to add)">
+              <TagInput
+                tags={forms.email_composer.keyPoints}
+                onChange={(keyPoints) => update('email_composer', { keyPoints })}
+                placeholder="e.g. 20% discount, Friday deadline, free trial..." />
             </Field>
           </>
         )}
 
+        {/* ── Social Post ── */}
         {contentType === 'social_media_caption' && (
           <>
             <Field label="Platform">
               <SelectWrapper>
                 <select value={forms.social_media_caption.platform}
-                  onChange={(e) => update('social_media_caption', { platform: e.target.value as 'instagram' | 'linkedin' | 'twitter' })}
+                  onChange={(e) => update('social_media_caption', { platform: e.target.value as SocialMediaForm['platform'] })}
                   className={selectCls}>
                   <option value="instagram">Instagram</option>
                   <option value="linkedin">LinkedIn</option>
                   <option value="twitter">Twitter / X</option>
+                  <option value="facebook">Facebook</option>
                 </select>
               </SelectWrapper>
             </Field>
@@ -227,13 +272,36 @@ export default function GenerateForm() {
             <Field label="Tone">
               <SelectWrapper>
                 <select value={forms.social_media_caption.tone}
-                  onChange={(e) => update('social_media_caption', { tone: e.target.value as 'professional' | 'casual' | 'fun' })}
+                  onChange={(e) => update('social_media_caption', { tone: e.target.value as SocialMediaForm['tone'] })}
                   className={selectCls}>
                   <option value="professional">Professional</option>
                   <option value="casual">Casual</option>
                   <option value="fun">Fun</option>
                 </select>
               </SelectWrapper>
+            </Field>
+            <Field label="Post Length">
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    { value: 'micro',  label: 'Micro',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 140 chars' : forms.social_media_caption.platform === 'facebook' ? '40–70 words' : 'up to 50 words' },
+                    { value: 'short',  label: 'Short',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 220 chars' : forms.social_media_caption.platform === 'linkedin' ? '80–130 words' : forms.social_media_caption.platform === 'facebook' ? '80–130 words' : '60–90 words' },
+                    { value: 'medium', label: 'Medium', hint: forms.social_media_caption.platform === 'twitter' ? 'up to 280 chars' : forms.social_media_caption.platform === 'linkedin' ? '180–280 words' : forms.social_media_caption.platform === 'facebook' ? '150–250 words' : '120–180 words' },
+                    { value: 'long',   label: 'Long',   hint: forms.social_media_caption.platform === 'twitter' ? '3–4 tweet thread' : forms.social_media_caption.platform === 'linkedin' ? '350–500 words' : forms.social_media_caption.platform === 'facebook' ? '300–450 words' : '220–300 words' },
+                  ] as const
+                ).map(({ value, label, hint }) => (
+                  <button key={value} type="button"
+                    onClick={() => update('social_media_caption', { wordCount: value })}
+                    className={`px-3 py-2.5 rounded-lg border text-left transition ${
+                      forms.social_media_caption.wordCount === value
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}>
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+                  </button>
+                ))}
+              </div>
             </Field>
           </>
         )}
