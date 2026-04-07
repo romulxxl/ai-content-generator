@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
-import { buildPrompt } from '@/lib/prompts'
-import type { ContentType, ContentInputs } from '@/lib/prompts'
+import { buildPrompt, isValidContentType } from '@/lib/prompts'
+import type { ContentInputs } from '@/lib/prompts'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -19,23 +19,27 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let contentType: ContentType
   let inputs: ContentInputs
+  let contentTypeRaw: unknown
 
   try {
     const body = await request.json()
-    contentType = body.contentType
+    contentTypeRaw = body.contentType
     inputs = body.inputs
 
-    if (!contentType || !inputs) {
+    if (!inputs) {
       return Response.json({ error: 'contentType and inputs are required' }, { status: 400 })
     }
   } catch {
     return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const prompt = buildPrompt(contentType, inputs)
+  if (!isValidContentType(contentTypeRaw)) {
+    return Response.json({ error: 'Invalid content type' }, { status: 400 })
+  }
 
+  const contentType = contentTypeRaw
+  const prompt = buildPrompt(contentType, inputs)
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
@@ -59,8 +63,18 @@ export async function POST(request: Request) {
 
         controller.close()
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Generation failed'
-        controller.enqueue(encoder.encode(`\n\n[Error: ${message}]`))
+        // Sanitize error — only expose safe, user-facing messages
+        let safeMessage = 'Generation failed. Please try again.'
+        if (err instanceof Error) {
+          if (err.message.includes('credit balance') || err.message.includes('billing')) {
+            safeMessage = 'Your Anthropic API credit balance is too low. Please add credits.'
+          } else if (err.message.includes('rate limit') || err.message.includes('429')) {
+            safeMessage = 'Rate limit reached. Please wait a moment and try again.'
+          } else if (err.message.includes('invalid x-api-key') || err.message.includes('authentication')) {
+            safeMessage = 'API key is invalid or missing. Check your configuration.'
+          }
+        }
+        controller.enqueue(encoder.encode(`\n\n[Error: ${safeMessage}]`))
         controller.close()
       }
     },

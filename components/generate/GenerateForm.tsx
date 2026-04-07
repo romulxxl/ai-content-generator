@@ -60,6 +60,7 @@ export default function GenerateForm() {
   const [variants, setVariants] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   function update<T extends ContentType>(type: T, patch: Partial<AllForms[T]>) {
     setForms((prev) => ({ ...prev, [type]: { ...prev[type], ...patch } }))
@@ -69,6 +70,7 @@ export default function GenerateForm() {
     if (result) setVariants((prev) => [...prev.slice(-4), result])
     setLoading(true)
     setError(null)
+    setSaveError(null)
     setResult('')
 
     try {
@@ -98,11 +100,19 @@ export default function GenerateForm() {
       }
 
       if (fullResult) {
-        await fetch('/api/history', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contentType, inputs: forms[contentType], result: fullResult }),
-        })
+        try {
+          const saveRes = await fetch('/api/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contentType, inputs: forms[contentType], result: fullResult }),
+          })
+          if (!saveRes.ok) {
+            const data = await saveRes.json().catch(() => ({}))
+            throw new Error((data as { error?: string }).error || 'Failed to save to history')
+          }
+        } catch (err) {
+          setSaveError(err instanceof Error ? err.message : 'Auto-save to history failed')
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed. Please try again.')
@@ -309,6 +319,12 @@ export default function GenerateForm() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
+          </div>
+        )}
+
+        {saveError && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm">
+            Auto-save failed: {saveError}
           </div>
         )}
 

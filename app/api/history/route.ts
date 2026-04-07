@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { isValidContentType } from '@/lib/prompts'
 
 export async function GET() {
   const supabase = createClient()
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { contentType: string; inputs: unknown; result: string }
+  let body: { contentType: unknown; inputs: unknown; result: unknown }
   try {
     body = await request.json()
   } catch {
@@ -42,8 +43,12 @@ export async function POST(request: Request) {
 
   const { contentType, inputs, result } = body
 
-  if (!contentType || !result) {
-    return Response.json({ error: 'contentType and result are required' }, { status: 400 })
+  if (!isValidContentType(contentType)) {
+    return Response.json({ error: 'Invalid content type' }, { status: 400 })
+  }
+
+  if (!result || typeof result !== 'string') {
+    return Response.json({ error: 'result is required and must be a string' }, { status: 400 })
   }
 
   const { data, error } = await supabase
@@ -51,7 +56,7 @@ export async function POST(request: Request) {
     .insert({
       user_id: user.id,
       content_type: contentType,
-      inputs: inputs ?? {},
+      inputs: (inputs && typeof inputs === 'object') ? inputs : {},
       result,
     })
     .select()

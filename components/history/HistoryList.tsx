@@ -54,24 +54,9 @@ export default function HistoryList() {
   }
 
   if (error) {
-    const isTableMissing = error.includes('schema cache') || error.includes("relation") || error.includes('generations')
-    if (isTableMissing) {
-      return (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="bg-gray-100 p-5 rounded-2xl mb-4">
-            <FileText className="w-10 h-10 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-1">No generations yet</h3>
-          <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
-            Head to <strong className="text-gray-500">Generate</strong> to create content and save
-            it to your history.
-          </p>
-        </div>
-      )
-    }
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl text-sm">
-        <strong>Error:</strong> {error}
+        <strong>Failed to load history:</strong> {error}
       </div>
     )
   }

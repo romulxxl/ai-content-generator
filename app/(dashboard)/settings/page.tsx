@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [nameInput, setNameInput] = useState('')
+  const [profileLoaded, setProfileLoaded] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
   const [profileError, setProfileError] = useState<string | null>(null)
@@ -24,10 +25,13 @@ export default function SettingsPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         setEmail(data.user.email ?? '')
-        const name = (data.user.user_metadata?.full_name as string) ?? ''
+        const name = typeof data.user.user_metadata?.full_name === 'string'
+          ? data.user.user_metadata.full_name
+          : ''
         setDisplayName(name)
         setNameInput(name)
       }
+      setProfileLoaded(true)
     })
   }, [])
 
@@ -52,10 +56,12 @@ export default function SettingsPage() {
 
   const handleSignOut = async () => {
     setSignOutLoading(true)
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } finally {
+      router.push('/login')
+    }
   }
 
   const initials = displayName
@@ -114,7 +120,7 @@ export default function SettingsPage() {
 
           <button
             onClick={handleSaveProfile}
-            disabled={savingProfile || nameInput.trim() === displayName}
+            disabled={savingProfile || !profileLoaded || nameInput.trim() === displayName}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
           >
             {profileSaved ? (

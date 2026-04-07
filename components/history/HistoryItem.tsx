@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Trash2, Copy, CheckCircle } from 'lucide-react'
+import { ChevronDown, ChevronUp, Trash2, Copy, CheckCircle, AlertCircle } from 'lucide-react'
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
-  product_description: 'Product Description',
-  blog_post_outline: 'Blog Post Outline',
-  email_subject_lines: 'Email Subject Lines',
-  social_media_caption: 'Social Media Caption',
+  product_description:  'Product Description',
+  blog_post_outline:    'Blog Blueprint',
+  email_composer:       'Email Composer',
+  social_media_caption: 'Social Post',
 }
 
 interface Generation {
@@ -27,7 +27,9 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
   const [expanded, setExpanded] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState(false)
 
   const handleDelete = async () => {
     if (!confirmDelete) {
@@ -36,13 +38,18 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
       return
     }
     setDeleting(true)
+    setDeleteError(null)
     try {
       const res = await fetch(`/api/history/${item.id}`, { method: 'DELETE' })
       if (res.ok || res.status === 204) {
         onDelete(item.id)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        throw new Error((data as { error?: string }).error || 'Failed to delete')
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete')
+      setConfirmDelete(false)
     } finally {
       setDeleting(false)
     }
@@ -54,7 +61,8 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // ignore
+      setCopyError(true)
+      setTimeout(() => setCopyError(false), 2000)
     }
   }
 
@@ -87,11 +95,14 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             onClick={(e) => { e.stopPropagation(); handleCopy() }}
-            title="Copy to clipboard"
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+            aria-label="Copy to clipboard"
+            title={copyError ? 'Copy failed — clipboard access denied' : 'Copy to clipboard'}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition text-gray-400 hover:text-gray-600"
           >
             {copied ? (
               <CheckCircle className="w-4 h-4 text-green-500" />
+            ) : copyError ? (
+              <AlertCircle className="w-4 h-4 text-red-400" />
             ) : (
               <Copy className="w-4 h-4" />
             )}
@@ -99,6 +110,7 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
           <button
             onClick={(e) => { e.stopPropagation(); handleDelete() }}
             disabled={deleting}
+            aria-label={confirmDelete ? 'Confirm deletion' : 'Delete generation'}
             title={confirmDelete ? 'Click again to confirm deletion' : 'Delete'}
             className={`p-1.5 rounded-lg transition disabled:opacity-50 ${
               confirmDelete
@@ -119,6 +131,13 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
       {confirmDelete && (
         <div className="px-5 py-2.5 bg-red-50 border-t border-red-100 text-xs text-red-600 font-medium">
           Click the delete button again to confirm deletion
+        </div>
+      )}
+
+      {deleteError && (
+        <div className="px-5 py-2.5 bg-red-50 border-t border-red-100 text-xs text-red-600 font-medium flex items-center gap-1.5">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          {deleteError}
         </div>
       )}
 

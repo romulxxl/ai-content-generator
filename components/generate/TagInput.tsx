@@ -7,18 +7,22 @@ interface TagInputProps {
   tags: string[]
   onChange: (tags: string[]) => void
   placeholder?: string
+  maxTags?: number
+  maxTagLength?: number
 }
 
 export default function TagInput({
   tags,
   onChange,
   placeholder = 'Type and press Enter',
+  maxTags = 10,
+  maxTagLength = 60,
 }: TagInputProps) {
   const [inputValue, setInputValue] = useState('')
 
   const addTag = (value: string) => {
-    const trimmed = value.trim()
-    if (trimmed && !tags.includes(trimmed)) {
+    const trimmed = value.trim().slice(0, maxTagLength)
+    if (trimmed && !tags.includes(trimmed) && tags.length < maxTags) {
       onChange([...tags, trimmed])
     }
     setInputValue('')
