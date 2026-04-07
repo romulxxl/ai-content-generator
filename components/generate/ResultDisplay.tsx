@@ -18,9 +18,9 @@ function wordCount(text: string) {
 }
 
 const WORD_RANGE: Record<ContentType, string> = {
-  product_description: '100–200 words',
-  blog_post_outline: '200–400 words',
-  email_composer: '100–600 words',
+  product_description:  '50–400 words',
+  blog_post_outline:    '200–600 words',
+  email_composer:       '100–600 words',
   social_media_caption: '20–300 words',
 }
 

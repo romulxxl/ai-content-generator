@@ -13,7 +13,7 @@ const CONTENT_TYPES: { value: ContentType; label: string; description: string }[
   { value: 'social_media_caption', label: 'Social Post',         description: 'ready-to-publish posts for any social media platform' },
 ]
 
-type ProductDescriptionForm = { productName: string; keyFeatures: string[]; tone: 'formal' | 'casual' | 'playful' | 'authoritative' | 'urgent' | 'empathetic' | 'minimalist' }
+type ProductDescriptionForm = { productName: string; keyFeatures: string[]; tone: 'formal' | 'casual' | 'playful' | 'authoritative' | 'urgent' | 'empathetic' | 'minimalist'; wordCount: 'teaser' | 'standard' | 'extended' }
 type BlogPostForm           = { topic: string; targetAudience: string; desiredLength: 'short' | 'medium' | 'long' }
 type EmailForm              = { companyName: string; emailPurpose: string; emailStyle: 'formal' | 'friendly' | 'persuasive' | 'direct' | 'empathetic'; emailLength: 'brief' | 'standard' | 'detailed'; keyPoints: string[] }
 type SocialMediaForm        = { platform: 'instagram' | 'linkedin' | 'twitter' | 'facebook'; topic: string; tone: 'professional' | 'casual' | 'fun'; wordCount: 'micro' | 'short' | 'medium' | 'long' }
@@ -26,7 +26,7 @@ type AllForms = {
 }
 
 const initialForms: AllForms = {
-  product_description:  { productName: '', keyFeatures: [], tone: 'formal' },
+  product_description:  { productName: '', keyFeatures: [], tone: 'formal', wordCount: 'standard' },
   blog_post_outline:    { topic: '', targetAudience: '', desiredLength: 'medium' },
   email_composer:       { companyName: '', emailPurpose: '', emailStyle: 'formal', emailLength: 'standard', keyPoints: [] },
   social_media_caption: { platform: 'instagram', topic: '', tone: 'casual', wordCount: 'short' },
@@ -172,6 +172,28 @@ export default function GenerateForm() {
                 </select>
               </SelectWrapper>
             </Field>
+            <Field label="Length">
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { value: 'teaser',   label: 'Teaser',   hint: '50–80 words' },
+                    { value: 'standard', label: 'Standard', hint: '120–200 words' },
+                    { value: 'extended', label: 'Extended', hint: '250–400 words' },
+                  ] as const
+                ).map(({ value, label, hint }) => (
+                  <button key={value} type="button"
+                    onClick={() => update('product_description', { wordCount: value })}
+                    className={`px-3 py-2.5 rounded-lg border text-left transition ${
+                      forms.product_description.wordCount === value
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}>
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+                  </button>
+                ))}
+              </div>
+            </Field>
           </>
         )}
 
@@ -188,16 +210,27 @@ export default function GenerateForm() {
                 onChange={(e) => update('blog_post_outline', { targetAudience: e.target.value })}
                 className={inputCls} placeholder="e.g. Small business owners, 30-50 years old" />
             </Field>
-            <Field label="Desired Length">
-              <SelectWrapper>
-                <select value={forms.blog_post_outline.desiredLength}
-                  onChange={(e) => update('blog_post_outline', { desiredLength: e.target.value as BlogPostForm['desiredLength'] })}
-                  className={selectCls}>
-                  <option value="short">Short (5-7 sections)</option>
-                  <option value="medium">Medium (7-10 sections)</option>
-                  <option value="long">Long (10-15 sections)</option>
-                </select>
-              </SelectWrapper>
+            <Field label="Article Scope">
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { value: 'short',  label: 'Overview',      hint: '5–7 sections / ~500 words' },
+                    { value: 'medium', label: 'Standard',      hint: '7–10 sections / ~1 000 words' },
+                    { value: 'long',   label: 'Comprehensive', hint: '10–15 sections / ~2 000 words' },
+                  ] as const
+                ).map(({ value, label, hint }) => (
+                  <button key={value} type="button"
+                    onClick={() => update('blog_post_outline', { desiredLength: value })}
+                    className={`px-3 py-2.5 rounded-lg border text-left transition ${
+                      forms.blog_post_outline.desiredLength === value
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}>
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+                  </button>
+                ))}
+              </div>
             </Field>
           </>
         )}

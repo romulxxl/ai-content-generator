@@ -8,6 +8,7 @@ export interface ProductDescriptionInputs {
   productName: string
   keyFeatures: string[]
   tone: 'formal' | 'casual' | 'playful' | 'authoritative' | 'urgent' | 'empathetic' | 'minimalist'
+  wordCount: 'teaser' | 'standard' | 'extended'
 }
 
 export interface BlogPostInputs {
@@ -52,21 +53,22 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
   switch (contentType) {
     case 'product_description': {
       const i = inputs as ProductDescriptionInputs
+      const wordCountGuide: Record<string, string> = {
+        teaser:   '50–80 words — one tight paragraph; every word earns its place. Ideal for product cards and catalogue listings.',
+        standard: '120–200 words — 2 focused paragraphs that cover the key benefits and end with a call to action. Ideal for product pages.',
+        extended: '250–400 words — 3–4 paragraphs with richer context, use cases, and a strong closing CTA. Ideal for landing pages.',
+      }
       return (
-        'Write a compelling product description for "' +
-        i.productName +
-        '".\n\n' +
-        'Key features: ' +
-        i.keyFeatures.join(', ') +
-        '\nTone: ' +
-        i.tone +
-        '\n\n' +
+        'Write a compelling product description for "' + i.productName + '".\n\n' +
+        'Key features: ' + i.keyFeatures.join(', ') + '\n' +
+        'Tone: ' + i.tone + '\n' +
+        'Length target: ' + wordCountGuide[i.wordCount] + '\n\n' +
         'Instructions:\n' +
         '1. If "' + i.productName + '" is a real existing product or brand, ground the description in its actual real-world qualities, reputation, and known characteristics. Use the provided key features as emphasis points, but stay true to what the product actually is.\n' +
         '2. If the product is unknown or fictional, use the key features as a starting point and freely enrich the description with plausible, creative detail that fits the product category and tone.\n' +
         '3. Every key feature listed (' + i.keyFeatures.join(', ') + ') must appear in the text at least once — either the exact word or a direct synonym. Do not ignore any of them.\n' +
         '4. Do not compare the product to other brands or products. Write about it on its own merits.\n' +
-        '5. Write 2-3 paragraphs in a ' + i.tone + ' tone.\n' +
+        '5. Strictly respect the length target above. Do not exceed it or fall significantly short.\n' +
         '6. End with a short, natural call to action that fits the tone (e.g. "Order today.", "Try it now.", "See what it can do for you." — adapt to the context).\n' +
         '7. Avoid clichés. Do not use these phrases: "feels great in your hand", "staying power", "flagship-level", "without breaking the bank", "day-to-day", "game-changer", "state-of-the-art", "seamless experience", "intuitive design", "best of both worlds".\n' +
         '8. Do not include a title — just the description text.\n' +
@@ -76,24 +78,26 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
     }
     case 'blog_post_outline': {
       const i = inputs as BlogPostInputs
-      const lengthMap: Record<string, string> = {
-        short: '5-7 розділів',
-        medium: '7-10 розділів',
-        long: '10-15 розділів',
+      const lengthMap: Record<string, { sections: string; words: string }> = {
+        short:  { sections: '5–7 розділів', words: '~500 слів' },
+        medium: { sections: '7–10 розділів', words: '~1 000 слів' },
+        long:   { sections: '10–15 розділів', words: '~2 000+ слів' },
       }
+      const { sections, words } = lengthMap[i.desiredLength]
       return (
         'Створи детальний outline для блог-посту на тему: "' + i.topic + '".\n\n' +
         'Цільова аудиторія: ' + i.targetAudience + '\n' +
-        'Бажана довжина: ' + lengthMap[i.desiredLength] + '\n\n' +
+        'Формат статті: ' + sections + ', цільовий обсяг готової статті — ' + words + '\n\n' +
         'ВАЖЛИВО — правила форматування:\n' +
         '- Відповідай повністю тією мовою, якою написана тема. Якщо тема українською — весь текст українською, включно з назвами розділів (не "Title", а "Назва"; не "Introduction Hook", а "Вступний гачок" тощо).\n' +
         '- Не використовуй символи markdown: без решіток (#), без зірочок (*), без підкреслень (_).\n' +
         '- Розділи нумеруй цифрами з крапкою (1. 2. 3.), підрозділи — літерами або дефісом з відступом.\n' +
-        '- Для виділення тексту використовуй лапки.\n\n' +
+        '- Для виділення тексту використовуй лапки.\n' +
+        '- Для кожного розділу вкажи орієнтовний обсяг у словах, щоб у сумі вийшло ' + words + '.\n\n' +
         'Структура outline:\n' +
         'Назва\n' +
         'Вступний гачок\n' +
-        'Основні розділи з підпунктами (' + lengthMap[i.desiredLength] + ')\n' +
+        'Основні розділи з підпунктами (' + sections + ')\n' +
         'Висновок\n' +
         'Заклик до дії'
       )
