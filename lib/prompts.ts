@@ -37,6 +37,17 @@ export type ContentInputs =
   | EmailInputs
   | SocialMediaInputs
 
+const VALID_CONTENT_TYPES = [
+  'product_description',
+  'blog_post_outline',
+  'email_composer',
+  'social_media_caption',
+] as const
+
+export function isValidContentType(value: unknown): value is ContentType {
+  return typeof value === 'string' && (VALID_CONTENT_TYPES as readonly string[]).includes(value)
+}
+
 export function buildPrompt(contentType: ContentType, inputs: ContentInputs): string {
   switch (contentType) {
     case 'product_description': {

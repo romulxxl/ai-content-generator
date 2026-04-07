@@ -20,8 +20,8 @@ function wordCount(text: string) {
 const WORD_RANGE: Record<ContentType, string> = {
   product_description: '100–200 words',
   blog_post_outline: '200–400 words',
-  email_subject_lines: '60–120 words',
-  social_media_caption: '20–80 words',
+  email_composer: '100–600 words',
+  social_media_caption: '20–300 words',
 }
 
 export default function ResultDisplay({
@@ -33,6 +33,7 @@ export default function ResultDisplay({
   onRegenerate,
 }: ResultDisplayProps) {
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -59,7 +60,8 @@ export default function ResultDisplay({
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {
-      // ignore
+      setCopyError(true)
+      setTimeout(() => setCopyError(false), 2000)
     }
   }
 
@@ -107,17 +109,23 @@ export default function ResultDisplay({
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-gray-600"
+              aria-label="Copy result to clipboard"
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition ${
+                copyError
+                  ? 'border-red-200 text-red-600 bg-red-50'
+                  : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+              }`}
             >
               {copied ? (
                 <CheckCircle className="w-3.5 h-3.5 text-green-500" />
               ) : (
                 <Copy className="w-3.5 h-3.5" />
               )}
-              {copied ? 'Copied!' : 'Copy'}
+              {copied ? 'Copied!' : copyError ? 'Copy failed' : 'Copy'}
             </button>
             <button
               onClick={onRegenerate}
+              aria-label="Regenerate content"
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-gray-600"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -126,6 +134,7 @@ export default function ResultDisplay({
             <button
               onClick={handleSave}
               disabled={saving || saved}
+              aria-label="Save to history"
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition disabled:opacity-60"
             >
               {saved ? (
