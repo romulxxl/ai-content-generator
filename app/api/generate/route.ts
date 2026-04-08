@@ -33,7 +33,7 @@ function sanitizeInputs(inputs: unknown): ContentInputs {
       sanitized[k] = v
     }
   }
-  return sanitized as ContentInputs
+  return sanitized as unknown as ContentInputs
 }
 
 export async function POST(request: Request) {
