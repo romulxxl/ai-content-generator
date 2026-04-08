@@ -93,14 +93,14 @@ export default function ResultDisplay({
     : false
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <h3 className="font-semibold text-gray-800 text-sm">Generated Result</h3>
+          <h3 className="font-semibold text-slate-800 text-sm">Generated Result</h3>
           {!loading && displayText && !isError && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-slate-400">
               {wordCount(displayText)} words
-              <span className="ml-1 text-gray-300">/ rec. {WORD_RANGE[contentType]}</span>
+              <span className="ml-1 text-slate-300">/ rec. {WORD_RANGE[contentType]}</span>
             </span>
           )}
         </div>
@@ -113,7 +113,7 @@ export default function ResultDisplay({
               className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition ${
                 copyError
                   ? 'border-red-200 text-red-600 bg-red-50'
-                  : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                  : 'border-slate-200 hover:bg-slate-50 text-slate-600'
               }`}
             >
               {copied ? (
@@ -135,7 +135,7 @@ export default function ResultDisplay({
               onClick={handleSave}
               disabled={saving || saved}
               aria-label="Save to history"
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition disabled:opacity-60"
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition disabled:opacity-60"
             >
               {saved ? (
                 <CheckCircle className="w-3.5 h-3.5" />
@@ -150,26 +150,26 @@ export default function ResultDisplay({
 
       {/* Variant navigation */}
       {totalVersions > 1 && (
-        <div className="flex items-center gap-2 px-6 py-2 border-b border-gray-100 bg-gray-50">
+        <div className="flex items-center gap-2 px-6 py-2 border-b border-slate-100 bg-slate-50">
           <button
             disabled={currentIndex === 0}
             onClick={() => setActiveVariant(currentIndex - 1 === variants.length ? null : currentIndex - 1)}
-            className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 transition"
+            className="p-1 rounded hover:bg-slate-200 disabled:opacity-30 transition"
           >
-            <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
+            <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
           </button>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-slate-500">
             Version {currentIndex + 1} of {totalVersions}
             {currentIndex === variants.length && !loading && (
-              <span className="ml-1.5 text-indigo-500 font-medium">latest</span>
+              <span className="ml-1.5 text-teal-500 font-medium">latest</span>
             )}
           </span>
           <button
             disabled={currentIndex === variants.length}
             onClick={() => setActiveVariant(currentIndex + 1 >= variants.length ? null : currentIndex + 1)}
-            className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 transition"
+            className="p-1 rounded hover:bg-slate-200 disabled:opacity-30 transition"
           >
-            <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
           </button>
         </div>
       )}
@@ -177,7 +177,7 @@ export default function ResultDisplay({
       <div className="p-6 min-h-[100px]">
         {loading && !result && (
           <div className="flex items-center gap-3 text-gray-400">
-            <span className="w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin inline-block" />
+            <span className="w-4 h-4 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin inline-block" />
             <span className="text-sm">Claude is generating...</span>
           </div>
         )}
@@ -205,10 +205,10 @@ export default function ResultDisplay({
             )
           }
           return (
-            <pre className="whitespace-pre-wrap font-sans text-sm text-gray-800 leading-relaxed">
+            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800 leading-relaxed">
               {displayText}
               {loading && activeVariant === null && (
-                <span className="inline-block w-2 h-4 bg-indigo-600 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
+                <span className="inline-block w-2 h-4 bg-teal-600 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
               )}
             </pre>
           )

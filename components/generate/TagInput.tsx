@@ -45,17 +45,17 @@ export default function TagInput({
   }
 
   return (
-    <div className="min-h-[42px] w-full border border-gray-200 rounded-lg px-3 py-2 flex flex-wrap gap-1.5 items-center focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent bg-white transition">
+    <div className="min-h-[42px] w-full border border-slate-200 rounded-lg px-3 py-2 flex flex-wrap gap-1.5 items-center focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent bg-white transition">
       {tags.map((tag, i) => (
         <span
           key={i}
-          className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 text-xs font-medium px-2.5 py-1 rounded-md"
+          className="inline-flex items-center gap-1 bg-teal-100 text-teal-700 text-xs font-medium px-2.5 py-1 rounded-md"
         >
           {tag}
           <button
             type="button"
             onClick={() => removeTag(i)}
-            className="hover:text-indigo-900 transition-colors"
+            className="hover:text-teal-900 transition-colors"
           >
             <X className="w-3 h-3" />
           </button>
@@ -68,7 +68,7 @@ export default function TagInput({
         onKeyDown={handleKeyDown}
         onBlur={() => inputValue.trim() && addTag(inputValue)}
         placeholder={tags.length === 0 ? placeholder : ''}
-        className="flex-1 min-w-[120px] outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
+        className="flex-1 min-w-[120px] outline-none text-sm text-slate-700 placeholder-slate-400 bg-transparent"
       />
     </div>
   )

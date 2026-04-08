@@ -32,13 +32,13 @@ const initialForms: AllForms = {
   social_media_caption: { platform: 'instagram', topic: '', tone: 'casual', wordCount: 'short' },
 }
 
-const inputCls  = 'w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition'
-const selectCls = 'w-full appearance-none px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white transition'
+const inputCls  = 'w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition'
+const selectCls = 'w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white transition'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
       {children}
     </div>
   )
@@ -61,6 +61,16 @@ export default function GenerateForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  const canGenerate = (() => {
+    const f = forms[contentType]
+    switch (contentType) {
+      case 'product_description':  return (f as typeof forms.product_description).productName.trim() !== ''
+      case 'blog_post_outline':    return (f as typeof forms.blog_post_outline).topic.trim() !== ''
+      case 'email_composer':       return (f as typeof forms.email_composer).companyName.trim() !== '' && (f as typeof forms.email_composer).emailPurpose.trim() !== ''
+      case 'social_media_caption': return (f as typeof forms.social_media_caption).topic.trim() !== ''
+    }
+  })()
 
   function update<T extends ContentType>(type: T, patch: Partial<AllForms[T]>) {
     setForms((prev) => ({ ...prev, [type]: { ...prev[type], ...patch } }))
@@ -124,11 +134,11 @@ export default function GenerateForm() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Generate Content</h1>
-        <p className="text-gray-500 mt-1 text-sm">Select a content type and fill in the details</p>
+        <h1 className="text-2xl font-bold text-slate-900">Generate Content</h1>
+        <p className="text-slate-500 mt-1 text-sm">Select a content type and fill in the details</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-5">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
         <Field label="Content Type">
           <SelectWrapper>
             <select
@@ -185,11 +195,11 @@ export default function GenerateForm() {
                     onClick={() => update('product_description', { wordCount: value })}
                     className={`px-3 py-2.5 rounded-lg border text-left transition ${
                       forms.product_description.wordCount === value
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                        ? 'border-teal-500 bg-teal-50 text-teal-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                     }`}>
                     <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+                    <span className="block text-xs text-slate-400 mt-0.5">{hint}</span>
                   </button>
                 ))}
               </div>
@@ -223,11 +233,11 @@ export default function GenerateForm() {
                     onClick={() => update('blog_post_outline', { desiredLength: value })}
                     className={`px-3 py-2.5 rounded-lg border text-left transition ${
                       forms.blog_post_outline.desiredLength === value
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                        ? 'border-teal-500 bg-teal-50 text-teal-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                     }`}>
                     <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+                    <span className="block text-xs text-slate-400 mt-0.5">{hint}</span>
                   </button>
                 ))}
               </div>
@@ -274,11 +284,11 @@ export default function GenerateForm() {
                     onClick={() => update('email_composer', { emailLength: value })}
                     className={`px-3 py-2.5 rounded-lg border text-left transition ${
                       forms.email_composer.emailLength === value
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                        ? 'border-teal-500 bg-teal-50 text-teal-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                     }`}>
                     <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+                    <span className="block text-xs text-slate-400 mt-0.5">{hint}</span>
                   </button>
                 ))}
               </div>
@@ -337,11 +347,11 @@ export default function GenerateForm() {
                     onClick={() => update('social_media_caption', { wordCount: value })}
                     className={`px-3 py-2.5 rounded-lg border text-left transition ${
                       forms.social_media_caption.wordCount === value
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                        ? 'border-teal-500 bg-teal-50 text-teal-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                     }`}>
                     <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+                    <span className="block text-xs text-slate-400 mt-0.5">{hint}</span>
                   </button>
                 ))}
               </div>
@@ -361,8 +371,8 @@ export default function GenerateForm() {
           </div>
         )}
 
-        <button onClick={handleGenerate} disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
+        <button onClick={handleGenerate} disabled={loading || !canGenerate}
+          className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
           {loading ? (
             <>
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

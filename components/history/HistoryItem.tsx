@@ -78,26 +78,26 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
     item.result.length > 100 ? item.result.slice(0, 100) + '…' : item.result
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div
-        className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-50 transition"
+        className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-slate-50 transition"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex-1 min-w-0 mr-4">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="text-xs font-medium bg-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+            <span className="text-xs font-medium bg-teal-100 text-teal-700 px-2.5 py-0.5 rounded-full whitespace-nowrap">
               {CONTENT_TYPE_LABELS[item.content_type] || item.content_type}
             </span>
-            <span className="text-xs text-gray-400">{date}</span>
+            <span className="text-xs text-slate-400">{date}</span>
           </div>
-          <p className="text-sm text-gray-600 truncate">{preview}</p>
+          <p className="text-sm text-slate-600 truncate">{preview}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             onClick={(e) => { e.stopPropagation(); handleCopy() }}
             aria-label="Copy to clipboard"
             title={copyError ? 'Copy failed — clipboard access denied' : 'Copy to clipboard'}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition text-gray-400 hover:text-gray-600"
+            className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-400 hover:text-slate-600"
           >
             {copied ? (
               <CheckCircle className="w-4 h-4 text-green-500" />
@@ -115,15 +115,15 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
             className={`p-1.5 rounded-lg transition disabled:opacity-50 ${
               confirmDelete
                 ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                : 'hover:bg-gray-100 text-gray-400 hover:text-red-500'
+                : 'hover:bg-slate-100 text-slate-400 hover:text-red-500'
             }`}
           >
             <Trash2 className="w-4 h-4" />
           </button>
           {expanded ? (
-            <ChevronUp className="w-4 h-4 text-gray-400" />
+            <ChevronUp className="w-4 h-4 text-slate-400" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-slate-400" />
           )}
         </div>
       </div>
@@ -142,8 +142,8 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
       )}
 
       {expanded && (
-        <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
-          <pre className="whitespace-pre-wrap font-sans text-sm text-gray-800 leading-relaxed">
+        <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
+          <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800 leading-relaxed">
             {item.result}
           </pre>
         </div>

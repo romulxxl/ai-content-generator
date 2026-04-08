@@ -19,16 +19,18 @@ export default function Header({ user }: HeaderProps) {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
-      <h2 className="text-base font-semibold text-gray-800">AI Content Generator</h2>
+    <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
+      <h2 className="text-base font-semibold text-slate-800">AI Content Generator</h2>
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-slate-500">
           <User className="w-4 h-4" />
-          <span className="hidden sm:inline max-w-[200px] truncate">{user.email}</span>
+          <span className="hidden sm:inline max-w-[200px] truncate">
+            {(user.user_metadata?.full_name as string) || user.email}
+          </span>
         </div>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-red-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
         >
           <LogOut className="w-4 h-4" />
           <span className="hidden sm:inline">Sign out</span>
