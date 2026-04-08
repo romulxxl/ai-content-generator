@@ -66,10 +66,8 @@ export async function POST(request: Request) {
   }
 
   const contentType = contentTypeRaw
-  const lengthKey = (inputs as Record<string, unknown>).wordCount as string
-    || (inputs as Record<string, unknown>).desiredLength as string
-    || (inputs as Record<string, unknown>).emailLength as string
-    || 'standard'
+  const inp = inputs as unknown as Record<string, unknown>
+  const lengthKey = (inp.wordCount ?? inp.desiredLength ?? inp.emailLength ?? 'standard') as string
   const maxTokens = MAX_TOKENS[contentType][lengthKey] ?? 1500
 
   const prompt = buildPrompt(contentType, inputs)
