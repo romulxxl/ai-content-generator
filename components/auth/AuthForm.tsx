@@ -54,21 +54,21 @@ export default function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 border border-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-100">
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-indigo-600 text-white p-3 rounded-xl mb-3">
+          <div className="bg-teal-500 text-white p-3 rounded-xl mb-3">
             <Sparkles className="w-7 h-7" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">AI Content Generator</h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <h1 className="text-2xl font-bold text-slate-900">AI Content Generator</h1>
+          <p className="text-slate-500 mt-1 text-sm">
             {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Email address
             </label>
             <input
@@ -77,11 +77,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Password
             </label>
             <input
@@ -91,7 +91,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimum 6 characters"
               minLength={6}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
             />
           </div>
 
@@ -109,7 +109,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg transition"
+            className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg transition"
           >
             {loading
               ? 'Please wait...'
@@ -119,18 +119,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-slate-500 mt-6">
           {mode === 'login' ? (
             <>
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-indigo-600 hover:underline font-medium">
+              <Link href="/signup" className="text-teal-600 hover:underline font-medium">
                 Sign up
               </Link>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <Link href="/login" className="text-indigo-600 hover:underline font-medium">
+              <Link href="/login" className="text-teal-600 hover:underline font-medium">
                 Sign in
               </Link>
             </>
