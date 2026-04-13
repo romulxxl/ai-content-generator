@@ -3,10 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { buildPrompt, isValidContentType } from '@/lib/prompts'
 import type { ContentType, ContentInputs } from '@/lib/prompts'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-
 export const runtime = 'nodejs'
 
 const MAX_TOKENS: Record<ContentType, Record<string, number>> = {
@@ -37,6 +33,11 @@ function sanitizeInputs(inputs: unknown): ContentInputs {
 }
 
 export async function POST(request: Request) {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    return Response.json({ error: 'Server configuration error: ANTHROPIC_API_KEY is not set.' }, { status: 500 })
+  }
+
   const supabase = createClient()
   const {
     data: { user },
@@ -52,11 +53,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     contentTypeRaw = body.contentType
-    inputs = sanitizeInputs(body.inputs)
-
-    if (!body.inputs) {
+    if (!body.contentType || !body.inputs) {
       return Response.json({ error: 'contentType and inputs are required' }, { status: 400 })
     }
+    inputs = sanitizeInputs(body.inputs)
   } catch {
     return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
@@ -70,6 +70,7 @@ export async function POST(request: Request) {
   const lengthKey = (inp.wordCount ?? inp.desiredLength ?? inp.emailLength ?? 'standard') as string
   const maxTokens = MAX_TOKENS[contentType][lengthKey] ?? 1500
 
+  const anthropic = new Anthropic({ apiKey })
   const prompt = buildPrompt(contentType, inputs)
   const encoder = new TextEncoder()
 
@@ -97,12 +98,15 @@ export async function POST(request: Request) {
         // Sanitize error — only expose safe, user-facing messages
         let safeMessage = 'Generation failed. Please try again.'
         if (err instanceof Error) {
-          if (err.message.includes('credit balance') || err.message.includes('billing')) {
+          const msg = err.message.toLowerCase()
+          if (msg.includes('credit balance') || msg.includes('billing') || msg.includes('insufficient')) {
             safeMessage = 'Your Anthropic API credit balance is too low. Please add credits.'
-          } else if (err.message.includes('rate limit') || err.message.includes('429')) {
+          } else if (msg.includes('rate limit') || msg.includes('429') || msg.includes('overloaded')) {
             safeMessage = 'Rate limit reached. Please wait a moment and try again.'
-          } else if (err.message.includes('invalid x-api-key') || err.message.includes('authentication')) {
-            safeMessage = 'API key is invalid or missing. Check your configuration.'
+          } else if (msg.includes('invalid x-api-key') || msg.includes('authentication') || msg.includes('api key') || msg.includes('401')) {
+            safeMessage = 'API key is invalid or missing. Check your Vercel environment variables.'
+          } else if (msg.includes('model') || msg.includes('not found') || msg.includes('404')) {
+            safeMessage = 'Model not available. Please contact support.'
           }
         }
         controller.enqueue(encoder.encode(`\n\n[Error: ${safeMessage}]`))
