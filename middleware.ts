@@ -31,7 +31,9 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
   const isAuthPage =
-    pathname.startsWith('/login') || pathname.startsWith('/signup')
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/forgot-password')
   const isProtected =
     pathname.startsWith('/generate') ||
     pathname.startsWith('/history') ||
