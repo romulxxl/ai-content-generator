@@ -38,10 +38,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (error) throw error
         setMessage('Check your email for the confirmation link.')
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         router.push('/generate')
         router.refresh()
@@ -117,6 +114,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
               ? 'Sign In'
               : 'Create Account'}
           </button>
+
+          {mode === 'login' && (
+            <div className="text-center">
+              <Link href="/forgot-password" className="text-sm text-slate-500 hover:text-teal-600 transition-colors">
+                Forgot your password?
+              </Link>
+            </div>
+          )}
         </form>
 
         <p className="text-center text-sm text-slate-500 mt-6">
