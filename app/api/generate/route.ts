@@ -1,9 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { streamText } from 'ai'
+import { createAnthropic } from '@ai-sdk/anthropic'
 import { createClient } from '@/lib/supabase/server'
 import { buildPrompt, isValidContentType } from '@/lib/prompts'
 import type { ContentType, ContentInputs } from '@/lib/prompts'
 
 export const runtime = 'nodejs'
+export const maxDuration = 60
 
 export function GET() {
   return Response.json({
@@ -91,59 +93,24 @@ export async function POST(request: Request) {
     const lengthKey = (inp.wordCount ?? inp.desiredLength ?? inp.emailLength ?? 'standard') as string
     const maxTokens = MAX_TOKENS[contentType][lengthKey] ?? 1500
 
-    const anthropic = new Anthropic({ apiKey })
+    const anthropic = createAnthropic({ apiKey })
     const prompt = buildPrompt(contentType, inputs)
-    const encoder = new TextEncoder()
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          const messageStream = anthropic.messages.stream({
-            model: 'claude-sonnet-4-6',
-            max_tokens: maxTokens,
-            system: 'You write clean, plain text content. Never use markdown formatting: no # headers, no ** or * for bold/italic, no _ underscores, no bullet dashes unless explicitly part of a list structure. To emphasize text, use double quotes. Keep the output minimal and readable.',
-            messages: [{ role: 'user', content: prompt }],
-          })
-
-          for await (const event of messageStream) {
-            if (
-              event.type === 'content_block_delta' &&
-              event.delta.type === 'text_delta'
-            ) {
-              controller.enqueue(encoder.encode(event.delta.text))
-            }
-          }
-
-          controller.close()
-        } catch (err) {
-          console.error('[generate] Anthropic error:', err instanceof Error ? err.message : err)
-          let safeMessage = 'Generation failed. Please try again.'
-          if (err instanceof Error) {
-            const msg = err.message.toLowerCase()
-            if (msg.includes('credit balance') || msg.includes('billing') || msg.includes('insufficient')) {
-              safeMessage = 'Your Anthropic API credit balance is too low. Please add credits.'
-            } else if (msg.includes('rate limit') || msg.includes('429') || msg.includes('overloaded')) {
-              safeMessage = 'Rate limit reached. Please wait a moment and try again.'
-            } else if (msg.includes('invalid x-api-key') || msg.includes('authentication') || msg.includes('api key') || msg.includes('401')) {
-              safeMessage = 'API key is invalid or missing. Check your Vercel environment variables.'
-            } else if (msg.includes('model') || msg.includes('not found') || msg.includes('404')) {
-              safeMessage = 'Model not available. Please contact support.'
-            }
-          }
-          controller.enqueue(encoder.encode(`\n\n[Error: ${safeMessage}]`))
-          controller.close()
-        }
-      },
+    const result = streamText({
+      model: anthropic('claude-sonnet-4-6'),
+      system: 'You write clean, plain text content. Never use markdown formatting: no # headers, no ** or * for bold/italic, no _ underscores, no bullet dashes unless explicitly part of a list structure. To emphasize text, use double quotes. Keep the output minimal and readable.',
+      messages: [{ role: 'user', content: prompt }],
+      maxOutputTokens: maxTokens,
     })
 
-    return new Response(stream, {
+    return result.toTextStreamResponse({
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache, no-transform',
         'X-Content-Type-Options': 'nosniff',
       },
     })
   } catch (err) {
+    console.error('[generate] error:', err instanceof Error ? err.message : err)
     const msg = err instanceof Error ? err.message : 'Unexpected server error'
     return Response.json({ error: msg }, { status: 500 })
   }
