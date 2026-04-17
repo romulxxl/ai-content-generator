@@ -79,62 +79,62 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
     case 'blog_post_outline': {
       const i = inputs as BlogPostInputs
       const lengthMap: Record<string, { sections: string; words: string }> = {
-        short:  { sections: '5–7 розділів', words: '~500 слів' },
-        medium: { sections: '7–10 розділів', words: '~1 000 слів' },
-        long:   { sections: '10–15 розділів', words: '~2 000+ слів' },
+        short:  { sections: '5–7 sections', words: '~500 words' },
+        medium: { sections: '7–10 sections', words: '~1 000 words' },
+        long:   { sections: '10–15 sections', words: '~2 000+ words' },
       }
       const { sections, words } = lengthMap[i.desiredLength]
       return (
-        'Створи детальний outline для блог-посту на тему: "' + i.topic + '".\n\n' +
-        'Цільова аудиторія: ' + i.targetAudience + '\n' +
-        'Формат статті: ' + sections + ', цільовий обсяг готової статті — ' + words + '\n\n' +
-        'ВАЖЛИВО — правила форматування:\n' +
-        '- Відповідай повністю тією мовою, якою написана тема. Якщо тема українською — весь текст українською, включно з назвами розділів (не "Title", а "Назва"; не "Introduction Hook", а "Вступний гачок" тощо).\n' +
-        '- Не використовуй символи markdown: без решіток (#), без зірочок (*), без підкреслень (_).\n' +
-        '- Розділи нумеруй цифрами з крапкою (1. 2. 3.), підрозділи — літерами або дефісом з відступом.\n' +
-        '- Для виділення тексту використовуй лапки.\n' +
-        '- Для кожного розділу вкажи орієнтовний обсяг у словах, щоб у сумі вийшло ' + words + '.\n\n' +
-        'Структура outline:\n' +
-        'Назва\n' +
-        'Вступний гачок\n' +
-        'Основні розділи з підпунктами (' + sections + ')\n' +
-        'Висновок\n' +
-        'Заклик до дії'
+        'Create a detailed blog post outline on the topic: "' + i.topic + '".\n\n' +
+        'Target audience: ' + i.targetAudience + '\n' +
+        'Article scope: ' + sections + ', target length for the full article — ' + words + '\n\n' +
+        'FORMATTING RULES:\n' +
+        '1. Respond fully in the same language as the topic is written in. If the topic is in Ukrainian, write everything in Ukrainian, including section names (not "Title" but the local equivalent, not "Introduction Hook" but the local equivalent, etc.).\n' +
+        '2. No markdown symbols: no hashtags (#), no asterisks (*), no underscores (_).\n' +
+        '3. Number main sections with digits and a period (1. 2. 3.); use letters or indented dashes for sub-points.\n' +
+        '4. To emphasize text, use quotation marks.\n' +
+        '5. For each section, indicate the approximate word count so the total adds up to ' + words + '.\n\n' +
+        'OUTLINE STRUCTURE:\n' +
+        'Title\n' +
+        'Opening hook\n' +
+        'Main sections with sub-points (' + sections + ')\n' +
+        'Conclusion\n' +
+        'Call to action'
       )
     }
     case 'email_composer': {
       const i = inputs as EmailInputs
       const lengthMap: Record<string, string> = {
-        brief:    '100-180 слів — стислий лист з одним чітким меседжем',
-        standard: '200-350 слів — повноцінний лист з контекстом і деталями',
-        detailed: '400-600 слів — розгорнутий лист з обґрунтуванням і всіма нюансами',
+        brief:    '100–180 words — one clear message, no filler',
+        standard: '200–350 words — full context with supporting detail',
+        detailed: '400–600 words — comprehensive letter covering all nuances',
       }
       const styleMap: Record<string, string> = {
-        formal:     'офіційний — чіткі формулювання, повні речення, без скорочень',
-        friendly:   'дружній — тепло, але по-справі, легкий тон без зайвої фамільярності',
-        persuasive: 'переконливий — акцент на вигодах, м\'яке заохочення до дії',
-        direct:     'прямий — без вступів і прелюдій, одразу до суті',
-        empathetic: 'емпатійний — розуміння ситуації читача, підтримуючий тон',
+        formal:     'formal — precise wording, complete sentences, no contractions',
+        friendly:   'friendly — warm but on-point, light tone without over-familiarity',
+        persuasive: 'persuasive — benefit-focused, gently drives the reader to act',
+        direct:     'direct — no preamble, straight to the point',
+        empathetic: 'empathetic — acknowledges the reader\'s situation, supportive tone',
       }
       return (
-        'Напиши email-лист від імені компанії "' + i.companyName + '".\n\n' +
-        'Призначення листа: ' + i.emailPurpose + '\n' +
-        'Стиль: ' + styleMap[i.emailStyle] + '\n' +
-        'Обсяг: ' + lengthMap[i.emailLength] + '\n' +
+        'Write a business email on behalf of "' + i.companyName + '".\n\n' +
+        'Email purpose: ' + i.emailPurpose + '\n' +
+        'Style: ' + styleMap[i.emailStyle] + '\n' +
+        'Length: ' + lengthMap[i.emailLength] + '\n' +
         (i.keyPoints.length > 0
-          ? 'Ключові моменти, які обов\'язково підкреслити: ' + i.keyPoints.join(', ') + '\n'
+          ? 'Key points to include: ' + i.keyPoints.join(', ') + '\n'
           : '') +
-        '\nВідповідай тією мовою, якою написане призначення листа.\n\n' +
-        'СТРУКТУРА:\n' +
-        '1. Тема листа (Subject:) — коротка, конкретна, до 60 символів.\n' +
-        '2. Привітання.\n' +
-        '3. Основний текст — зв\'язні абзаци, не список. Кожен ключовий момент розкрий природньо в тексті, а не переліком.\n' +
-        '4. Чіткий заклик до дії.\n' +
-        '5. Підпис від імені компанії.\n\n' +
-        'Правила:\n' +
-        '- Без markdown: без зірочок, решіток, підкреслень.\n' +
-        '- Рядок "Subject:" виводь першим, окремо від тіла листа.\n' +
-        '- Не починай кожен абзац з "Я" або назви компанії.'
+        '\nRespond in the same language as the email purpose is written in.\n\n' +
+        'STRUCTURE:\n' +
+        '1. Subject line (Subject:) — concise and specific, under 60 characters.\n' +
+        '2. Greeting.\n' +
+        '3. Body — flowing paragraphs, not a bullet list. Weave each key point naturally into the text.\n' +
+        '4. Clear call to action.\n' +
+        '5. Sign-off on behalf of the company.\n\n' +
+        'RULES:\n' +
+        '- No markdown: no asterisks, hashtags, or underscores.\n' +
+        '- Put the "Subject:" line first, separate from the email body.\n' +
+        '- Do not start consecutive paragraphs with "I" or the company name.'
       )
     }
     case 'social_media_caption': {
