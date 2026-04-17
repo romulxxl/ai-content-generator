@@ -7,7 +7,7 @@ create table if not exists public.generations (
     content_type in (
       'product_description',
       'blog_post_outline',
-      'email_subject_lines',
+      'email_composer',
       'social_media_caption'
     )
   ),

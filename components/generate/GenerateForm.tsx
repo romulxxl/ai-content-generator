@@ -4,7 +4,14 @@ import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import TagInput from './TagInput'
 import ResultDisplay from './ResultDisplay'
-import type { ContentType, ContentInputs } from '@/lib/prompts'
+import type {
+  ContentType,
+  ContentInputs,
+  ProductDescriptionInputs,
+  BlogPostInputs,
+  EmailInputs,
+  SocialMediaInputs,
+} from '@/lib/prompts'
 
 const CONTENT_TYPES: { value: ContentType; label: string; description: string }[] = [
   { value: 'product_description',  label: 'Product Description', description: 'sales-ready copy for product pages & landing pages' },
@@ -13,16 +20,11 @@ const CONTENT_TYPES: { value: ContentType; label: string; description: string }[
   { value: 'social_media_caption', label: 'Social Post',         description: 'ready-to-publish posts for any social media platform' },
 ]
 
-type ProductDescriptionForm = { productName: string; keyFeatures: string[]; tone: 'formal' | 'casual' | 'playful' | 'authoritative' | 'urgent' | 'empathetic' | 'minimalist'; wordCount: 'teaser' | 'standard' | 'extended' }
-type BlogPostForm           = { topic: string; targetAudience: string; desiredLength: 'short' | 'medium' | 'long' }
-type EmailForm              = { companyName: string; emailPurpose: string; emailStyle: 'formal' | 'friendly' | 'persuasive' | 'direct' | 'empathetic'; emailLength: 'brief' | 'standard' | 'detailed'; keyPoints: string[] }
-type SocialMediaForm        = { platform: 'instagram' | 'linkedin' | 'twitter' | 'facebook'; topic: string; tone: 'professional' | 'casual' | 'fun'; wordCount: 'micro' | 'short' | 'medium' | 'long' }
-
 type AllForms = {
-  product_description:  ProductDescriptionForm
-  blog_post_outline:    BlogPostForm
-  email_composer:       EmailForm
-  social_media_caption: SocialMediaForm
+  product_description:  ProductDescriptionInputs
+  blog_post_outline:    BlogPostInputs
+  email_composer:       EmailInputs
+  social_media_caption: SocialMediaInputs
 }
 
 const initialForms: AllForms = {
@@ -60,15 +62,14 @@ export default function GenerateForm() {
   const [variants, setVariants] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
 
   const canGenerate = (() => {
     const f = forms[contentType]
     switch (contentType) {
-      case 'product_description':  return (f as typeof forms.product_description).productName.trim() !== ''
-      case 'blog_post_outline':    return (f as typeof forms.blog_post_outline).topic.trim() !== ''
-      case 'email_composer':       return (f as typeof forms.email_composer).companyName.trim() !== '' && (f as typeof forms.email_composer).emailPurpose.trim() !== ''
-      case 'social_media_caption': return (f as typeof forms.social_media_caption).topic.trim() !== ''
+      case 'product_description':  return (f as ProductDescriptionInputs).productName.trim() !== ''
+      case 'blog_post_outline':    return (f as BlogPostInputs).topic.trim() !== ''
+      case 'email_composer':       return (f as EmailInputs).companyName.trim() !== '' && (f as EmailInputs).emailPurpose.trim() !== ''
+      case 'social_media_caption': return (f as SocialMediaInputs).topic.trim() !== ''
     }
   })()
 
@@ -80,7 +81,6 @@ export default function GenerateForm() {
     if (result) setVariants((prev) => [...prev.slice(-4), result])
     setLoading(true)
     setError(null)
-    setSaveError(null)
     setResult('')
 
     try {
@@ -99,30 +99,12 @@ export default function GenerateForm() {
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
-      let fullResult = ''
 
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
         const chunk = decoder.decode(value, { stream: true })
-        fullResult += chunk
         setResult((prev) => prev + chunk)
-      }
-
-      if (fullResult) {
-        try {
-          const saveRes = await fetch('/api/history', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contentType, inputs: forms[contentType], result: fullResult }),
-          })
-          if (!saveRes.ok) {
-            const data = await saveRes.json().catch(() => ({}))
-            throw new Error((data as { error?: string }).error || 'Failed to save to history')
-          }
-        } catch (err) {
-          setSaveError(err instanceof Error ? err.message : 'Auto-save to history failed')
-        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed. Please try again.')
@@ -170,7 +152,7 @@ export default function GenerateForm() {
             <Field label="Tone">
               <SelectWrapper>
                 <select value={forms.product_description.tone}
-                  onChange={(e) => update('product_description', { tone: e.target.value as ProductDescriptionForm['tone'] })}
+                  onChange={(e) => update('product_description', { tone: e.target.value as ProductDescriptionInputs['tone'] })}
                   className={selectCls}>
                   <option value="formal">Formal</option>
                   <option value="casual">Casual</option>
@@ -261,7 +243,7 @@ export default function GenerateForm() {
             <Field label="Style">
               <SelectWrapper>
                 <select value={forms.email_composer.emailStyle}
-                  onChange={(e) => update('email_composer', { emailStyle: e.target.value as EmailForm['emailStyle'] })}
+                  onChange={(e) => update('email_composer', { emailStyle: e.target.value as EmailInputs['emailStyle'] })}
                   className={selectCls}>
                   <option value="formal">Formal — precise & professional</option>
                   <option value="friendly">Friendly — warm & approachable</option>
@@ -308,7 +290,7 @@ export default function GenerateForm() {
             <Field label="Platform">
               <SelectWrapper>
                 <select value={forms.social_media_caption.platform}
-                  onChange={(e) => update('social_media_caption', { platform: e.target.value as SocialMediaForm['platform'] })}
+                  onChange={(e) => update('social_media_caption', { platform: e.target.value as SocialMediaInputs['platform'] })}
                   className={selectCls}>
                   <option value="instagram">Instagram</option>
                   <option value="linkedin">LinkedIn</option>
@@ -325,7 +307,7 @@ export default function GenerateForm() {
             <Field label="Tone">
               <SelectWrapper>
                 <select value={forms.social_media_caption.tone}
-                  onChange={(e) => update('social_media_caption', { tone: e.target.value as SocialMediaForm['tone'] })}
+                  onChange={(e) => update('social_media_caption', { tone: e.target.value as SocialMediaInputs['tone'] })}
                   className={selectCls}>
                   <option value="professional">Professional</option>
                   <option value="casual">Casual</option>
@@ -362,12 +344,6 @@ export default function GenerateForm() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
-          </div>
-        )}
-
-        {saveError && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm">
-            Auto-save failed: {saveError}
           </div>
         )}
 

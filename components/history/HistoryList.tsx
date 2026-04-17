@@ -12,32 +12,46 @@ interface Generation {
   created_at: string
 }
 
+const PAGE_LIMIT = 20
+
 export default function HistoryList() {
   const [items, setItems] = useState<Generation[]>([])
+  const [total, setTotal] = useState(0)
+  const [offset, setOffset] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const res = await fetch('/api/history')
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error((data as { error?: string }).error || 'Failed to load history')
-        }
-        const data: Generation[] = await res.json()
-        setItems(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load history')
-      } finally {
-        setLoading(false)
+  const fetchHistory = async (currentOffset: number, append = false) => {
+    try {
+      const res = await fetch(`/api/history?limit=${PAGE_LIMIT}&offset=${currentOffset}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error((data as { error?: string }).error || 'Failed to load history')
       }
+      const { data, total: totalCount }: { data: Generation[]; total: number } = await res.json()
+      setTotal(totalCount)
+      setItems((prev) => append ? [...prev, ...data] : data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load history')
     }
-    fetchHistory()
+  }
+
+  useEffect(() => {
+    fetchHistory(0).finally(() => setLoading(false))
   }, [])
+
+  const handleLoadMore = async () => {
+    const nextOffset = offset + PAGE_LIMIT
+    setLoadingMore(true)
+    await fetchHistory(nextOffset, true)
+    setOffset(nextOffset)
+    setLoadingMore(false)
+  }
 
   const handleDelete = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id))
+    setTotal((prev) => prev - 1)
   }
 
   if (loading) {
@@ -76,12 +90,25 @@ export default function HistoryList() {
     )
   }
 
+  const hasMore = items.length < total
+
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-500">{items.length} generation{items.length !== 1 ? 's' : ''}</p>
+      <p className="text-sm text-slate-500">
+        Showing {items.length} of {total} generation{total !== 1 ? 's' : ''}
+      </p>
       {items.map((item) => (
         <HistoryItem key={item.id} item={item} onDelete={handleDelete} />
       ))}
+      {hasMore && (
+        <button
+          onClick={handleLoadMore}
+          disabled={loadingMore}
+          className="w-full py-2.5 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 transition"
+        >
+          {loadingMore ? 'Loading...' : `Load more (${total - items.length} remaining)`}
+        </button>
+      )}
     </div>
   )
 }

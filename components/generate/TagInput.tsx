@@ -48,7 +48,7 @@ export default function TagInput({
     <div className="min-h-[42px] w-full border border-slate-200 rounded-lg px-3 py-2 flex flex-wrap gap-1.5 items-center focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent bg-white transition">
       {tags.map((tag, i) => (
         <span
-          key={i}
+          key={tag}
           className="inline-flex items-center gap-1 bg-teal-100 text-teal-700 text-xs font-medium px-2.5 py-1 rounded-md"
         >
           {tag}

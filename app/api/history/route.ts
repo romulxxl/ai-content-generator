@@ -1,35 +1,53 @@
 import { createClient } from '@/lib/supabase/server'
 import { isValidContentType } from '@/lib/prompts'
 
-export async function GET() {
+const PAGE_LIMIT = 20
+
+export async function GET(request: Request) {
   const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+
+  let user
+  try {
+    const { data, error: authError } = await supabase.auth.getUser()
+    if (authError) return Response.json({ error: 'Auth check failed' }, { status: 503 })
+    user = data.user
+  } catch {
+    return Response.json({ error: 'Auth check failed. Please refresh and try again.' }, { status: 503 })
+  }
 
   if (!user) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data, error } = await supabase
+  const { searchParams } = new URL(request.url)
+  const limit = Math.min(parseInt(searchParams.get('limit') ?? String(PAGE_LIMIT), 10), 50)
+  const offset = Math.max(parseInt(searchParams.get('offset') ?? '0', 10), 0)
+
+  const { data, error, count } = await supabase
     .from('generations')
-    .select('id, content_type, inputs, result, created_at')
+    .select('id, content_type, inputs, result, created_at', { count: 'exact' })
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(100)
+    .range(offset, offset + limit - 1)
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  return Response.json(data)
+  return Response.json({ data: data ?? [], total: count ?? 0 })
 }
 
 export async function POST(request: Request) {
   const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+
+  let user
+  try {
+    const { data, error: authError } = await supabase.auth.getUser()
+    if (authError) return Response.json({ error: 'Auth check failed' }, { status: 503 })
+    user = data.user
+  } catch {
+    return Response.json({ error: 'Auth check failed. Please refresh and try again.' }, { status: 503 })
+  }
 
   if (!user) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })

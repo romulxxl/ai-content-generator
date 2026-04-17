@@ -7,14 +7,6 @@ import type { ContentType, ContentInputs } from '@/lib/prompts'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-export function GET() {
-  return Response.json({
-    ok: true,
-    hasApiKey: !!process.env.ANTHROPIC_API_KEY,
-    hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  })
-}
 
 const MAX_TOKENS: Record<ContentType, Record<string, number>> = {
   product_description:  { teaser: 200, standard: 400, extended: 700 },
