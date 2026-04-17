@@ -116,6 +116,7 @@ export async function POST(request: Request) {
 
           controller.close()
         } catch (err) {
+          console.error('[generate] Anthropic error:', err instanceof Error ? err.message : err)
           let safeMessage = 'Generation failed. Please try again.'
           if (err instanceof Error) {
             const msg = err.message.toLowerCase()
