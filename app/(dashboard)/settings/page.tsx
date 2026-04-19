@@ -109,11 +109,11 @@ export default function SettingsPage() {
 
       {/* Profile */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50">
           <User className="w-4 h-4 text-slate-500" />
           <h2 className="font-semibold text-slate-800 text-sm">Profile</h2>
         </div>
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-4 md:px-6 py-5 space-y-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-teal-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
               {initials}
@@ -166,17 +166,17 @@ export default function SettingsPage() {
 
       {/* Security */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50">
           <Shield className="w-4 h-4 text-slate-500" />
           <h2 className="font-semibold text-slate-800 text-sm">Security</h2>
         </div>
-        <div className="px-6 py-5 space-y-3">
-          <div className="flex items-center justify-between">
+        <div className="px-4 md:px-6 py-5 space-y-3">
+          <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-slate-900">Authentication</p>
               <p className="text-sm text-slate-500">Managed via Supabase Auth — your session is secure</p>
             </div>
-            <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">Active</span>
+            <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium flex-shrink-0">Active</span>
           </div>
           <div className="pt-2 border-t border-slate-100">
             <button
@@ -193,11 +193,11 @@ export default function SettingsPage() {
 
       {/* Change Password */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50">
           <Lock className="w-4 h-4 text-slate-500" />
           <h2 className="font-semibold text-slate-800 text-sm">Change Password</h2>
         </div>
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-4 md:px-6 py-5 space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
             <input
@@ -239,11 +239,11 @@ export default function SettingsPage() {
 
       {/* Billing */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50">
           <CreditCard className="w-4 h-4 text-slate-500" />
           <h2 className="font-semibold text-slate-800 text-sm">API & Billing</h2>
         </div>
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-4 md:px-6 py-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-900">Current Plan</p>

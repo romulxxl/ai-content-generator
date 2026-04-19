@@ -120,7 +120,7 @@ export default function GenerateForm() {
         <p className="text-slate-500 mt-1 text-sm">Select a content type and fill in the details</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-6 shadow-sm space-y-5">
         <Field label="Content Type">
           <SelectWrapper>
             <select
