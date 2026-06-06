@@ -129,11 +129,25 @@ export default function DemoWidget() {
   return (
     <div className="bg-white rounded-2xl border border-[#e8e4db] shadow-[0_2px_16px_0_rgba(0,0,0,0.06)] overflow-hidden w-full text-left">
 
-      {/* ── Content-type tabs + counter ── */}
+      {/* ── Card header: label + usage badge ── */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#e8e4db] bg-[#faf8f3]/60">
+        <span className="text-[11px] font-medium text-[#a09890] uppercase tracking-wider">Live demo</span>
+        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+          limitReached
+            ? 'bg-red-50 text-red-600'
+            : displayRemaining <= 1
+            ? 'bg-amber-50 text-amber-600'
+            : 'bg-[#e0f0e8] text-[#1b3f2d]'
+        }`}>
+          {limitReached ? 'Limit reached' : `${displayRemaining} of ${DEMO_LIMIT} free`}
+        </span>
+      </div>
+
+      {/* ── Content-type tabs — only tabs ── */}
       <div className="flex border-b border-[#e8e4db]">
         {TABS.map(tab => (
           <button key={tab.id} onClick={() => handleTabChange(tab.id)}
-            className={`flex-1 py-3 text-xs font-semibold tracking-wide transition border-b-2 ${
+            className={`flex-1 py-2.5 text-xs font-semibold tracking-wide transition border-b-2 ${
               activeTab === tab.id
                 ? 'border-[#1b3f2d] text-[#1b3f2d] bg-white'
                 : 'border-transparent text-[#a09890] hover:text-[#6b6660] bg-[#faf8f3]/60 hover:bg-white/80'
@@ -141,11 +155,6 @@ export default function DemoWidget() {
             {tab.label}
           </button>
         ))}
-        <div className={`flex items-center px-4 text-xs font-medium shrink-0 border-b-2 border-transparent ${
-          limitReached ? 'text-red-500' : displayRemaining <= 1 ? 'text-amber-600' : 'text-[#6faa84]'
-        }`}>
-          {limitReached ? 'Limit reached' : `${displayRemaining} left`}
-        </div>
       </div>
 
       {/* ── Form ── */}
