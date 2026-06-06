@@ -34,8 +34,8 @@ const initialForms: AllForms = {
   social_media_caption: { platform: 'instagram', topic: '', tone: 'casual', wordCount: 'short' },
 }
 
-const inputCls  = 'w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition'
-const selectCls = 'w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white transition'
+const inputCls  = 'w-full px-4 py-2.5 border border-[#e8e4db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/20 focus:border-[#1b3f2d] transition bg-white text-[#1c1c17] placeholder:text-[#b0a89e]'
+const selectCls = 'w-full appearance-none px-4 py-2.5 border border-[#e8e4db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/20 focus:border-[#1b3f2d] bg-white transition text-[#1c1c17]'
 
 const TOKEN_MARKER = '\n\n__TOKENS__:'
 const ERROR_MARKER = '\n\n__ERROR__:'
@@ -43,7 +43,7 @@ const ERROR_MARKER = '\n\n__ERROR__:'
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-[#3d3d35] mb-1.5">{label}</label>
       {children}
     </div>
   )
@@ -53,10 +53,13 @@ function SelectWrapper({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
       {children}
-      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a09890] pointer-events-none" />
     </div>
   )
 }
+
+const activeLengthCls = 'border-[#1b3f2d] bg-[#f0f7f3] text-[#1b3f2d]'
+const inactiveLengthCls = 'border-[#e8e4db] bg-white text-[#6b6660] hover:border-[#1b3f2d] hover:text-[#1b3f2d]'
 
 export default function GenerateForm() {
   const [contentType, setContentType] = useState<ContentType>('product_description')
@@ -109,7 +112,6 @@ export default function GenerateForm() {
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
-
         accumulated += decoder.decode(value, { stream: true })
 
         const tIdx = accumulated.lastIndexOf(TOKEN_MARKER)
@@ -119,7 +121,6 @@ export default function GenerateForm() {
           setResult(accumulated.slice(0, tIdx))
           break
         }
-
         const eIdx = accumulated.lastIndexOf(ERROR_MARKER)
         if (eIdx !== -1) {
           const msg = accumulated.slice(eIdx + ERROR_MARKER.length).trim()
@@ -128,7 +129,6 @@ export default function GenerateForm() {
           setResult(accumulated.slice(0, eIdx) || '')
           break
         }
-
         setResult(accumulated)
       }
     } catch (err) {
@@ -141,11 +141,11 @@ export default function GenerateForm() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Generate Content</h1>
-        <p className="text-slate-500 mt-1 text-sm">Select a content type and fill in the details</p>
+        <h1 className="font-display text-2xl font-bold text-[#1c1c17] tracking-tight">Generate Content</h1>
+        <p className="text-[#6b6660] mt-1 text-sm">Select a content type and fill in the details</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-6 shadow-sm space-y-5">
+      <div className="bg-white rounded-xl border border-[#e8e4db] p-4 md:p-6 shadow-[0_1px_8px_0_rgba(0,0,0,0.04)] space-y-5">
         <Field label="Content Type">
           <SelectWrapper>
             <select
@@ -169,8 +169,7 @@ export default function GenerateForm() {
                 className={inputCls} placeholder="e.g. EcoBottle Pro" />
             </Field>
             <Field label="Key Features (press Enter or comma to add)">
-              <TagInput
-                tags={forms.product_description.keyFeatures}
+              <TagInput tags={forms.product_description.keyFeatures}
                 onChange={(keyFeatures) => update('product_description', { keyFeatures })}
                 placeholder="e.g. Stainless steel, 24oz, BPA-free..." />
             </Field>
@@ -191,22 +190,16 @@ export default function GenerateForm() {
             </Field>
             <Field label="Length">
               <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    { value: 'teaser',   label: 'Teaser',   hint: '50–80 words' },
-                    { value: 'standard', label: 'Standard', hint: '120–200 words' },
-                    { value: 'extended', label: 'Extended', hint: '250–400 words' },
-                  ] as const
-                ).map(({ value, label, hint }) => (
+                {([
+                  { value: 'teaser',   label: 'Teaser',   hint: '50–80 words' },
+                  { value: 'standard', label: 'Standard', hint: '120–200 words' },
+                  { value: 'extended', label: 'Extended', hint: '250–400 words' },
+                ] as const).map(({ value, label, hint }) => (
                   <button key={value} type="button"
                     onClick={() => update('product_description', { wordCount: value })}
-                    className={`px-3 py-2.5 rounded-lg border text-left transition ${
-                      forms.product_description.wordCount === value
-                        ? 'border-teal-500 bg-teal-50 text-teal-700'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}>
+                    className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.product_description.wordCount === value ? activeLengthCls : inactiveLengthCls}`}>
                     <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-slate-400 mt-0.5">{hint}</span>
+                    <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
                   </button>
                 ))}
               </div>
@@ -229,22 +222,16 @@ export default function GenerateForm() {
             </Field>
             <Field label="Article Scope">
               <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    { value: 'short',  label: 'Overview',      hint: '5–7 sections / ~500 words' },
-                    { value: 'medium', label: 'Standard',      hint: '7–10 sections / ~1 000 words' },
-                    { value: 'long',   label: 'Comprehensive', hint: '10–15 sections / ~2 000 words' },
-                  ] as const
-                ).map(({ value, label, hint }) => (
+                {([
+                  { value: 'short',  label: 'Overview',      hint: '5–7 sections / ~500 words' },
+                  { value: 'medium', label: 'Standard',      hint: '7–10 sections / ~1 000 words' },
+                  { value: 'long',   label: 'Comprehensive', hint: '10–15 sections / ~2 000 words' },
+                ] as const).map(({ value, label, hint }) => (
                   <button key={value} type="button"
                     onClick={() => update('blog_post_outline', { desiredLength: value })}
-                    className={`px-3 py-2.5 rounded-lg border text-left transition ${
-                      forms.blog_post_outline.desiredLength === value
-                        ? 'border-teal-500 bg-teal-50 text-teal-700'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}>
+                    className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.blog_post_outline.desiredLength === value ? activeLengthCls : inactiveLengthCls}`}>
                     <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-slate-400 mt-0.5">{hint}</span>
+                    <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
                   </button>
                 ))}
               </div>
@@ -280,29 +267,22 @@ export default function GenerateForm() {
             </Field>
             <Field label="Email Length">
               <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    { value: 'brief',    label: 'Brief',    hint: '100–180 words' },
-                    { value: 'standard', label: 'Standard', hint: '200–350 words' },
-                    { value: 'detailed', label: 'Detailed', hint: '400–600 words' },
-                  ] as const
-                ).map(({ value, label, hint }) => (
+                {([
+                  { value: 'brief',    label: 'Brief',    hint: '100–180 words' },
+                  { value: 'standard', label: 'Standard', hint: '200–350 words' },
+                  { value: 'detailed', label: 'Detailed', hint: '400–600 words' },
+                ] as const).map(({ value, label, hint }) => (
                   <button key={value} type="button"
                     onClick={() => update('email_composer', { emailLength: value })}
-                    className={`px-3 py-2.5 rounded-lg border text-left transition ${
-                      forms.email_composer.emailLength === value
-                        ? 'border-teal-500 bg-teal-50 text-teal-700'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}>
+                    className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.email_composer.emailLength === value ? activeLengthCls : inactiveLengthCls}`}>
                     <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-slate-400 mt-0.5">{hint}</span>
+                    <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
                   </button>
                 ))}
               </div>
             </Field>
             <Field label="Key Points to Highlight (press Enter or comma to add)">
-              <TagInput
-                tags={forms.email_composer.keyPoints}
+              <TagInput tags={forms.email_composer.keyPoints}
                 onChange={(keyPoints) => update('email_composer', { keyPoints })}
                 placeholder="e.g. 20% discount, Friday deadline, free trial..." />
             </Field>
@@ -342,23 +322,17 @@ export default function GenerateForm() {
             </Field>
             <Field label="Post Length">
               <div className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    { value: 'micro',  label: 'Micro',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 140 chars' : forms.social_media_caption.platform === 'facebook' ? '40–70 words' : 'up to 50 words' },
-                    { value: 'short',  label: 'Short',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 220 chars' : forms.social_media_caption.platform === 'linkedin' ? '80–130 words' : forms.social_media_caption.platform === 'facebook' ? '80–130 words' : '60–90 words' },
-                    { value: 'medium', label: 'Medium', hint: forms.social_media_caption.platform === 'twitter' ? 'up to 280 chars' : forms.social_media_caption.platform === 'linkedin' ? '180–280 words' : forms.social_media_caption.platform === 'facebook' ? '150–250 words' : '120–180 words' },
-                    { value: 'long',   label: 'Long',   hint: forms.social_media_caption.platform === 'twitter' ? '3–4 tweet thread' : forms.social_media_caption.platform === 'linkedin' ? '350–500 words' : forms.social_media_caption.platform === 'facebook' ? '300–450 words' : '220–300 words' },
-                  ] as const
-                ).map(({ value, label, hint }) => (
+                {([
+                  { value: 'micro',  label: 'Micro',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 140 chars' : 'up to 50 words' },
+                  { value: 'short',  label: 'Short',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 220 chars' : '60–90 words' },
+                  { value: 'medium', label: 'Medium', hint: forms.social_media_caption.platform === 'twitter' ? 'up to 280 chars' : '120–180 words' },
+                  { value: 'long',   label: 'Long',   hint: forms.social_media_caption.platform === 'twitter' ? '3–4 tweet thread' : '220–300 words' },
+                ] as const).map(({ value, label, hint }) => (
                   <button key={value} type="button"
                     onClick={() => update('social_media_caption', { wordCount: value })}
-                    className={`px-3 py-2.5 rounded-lg border text-left transition ${
-                      forms.social_media_caption.wordCount === value
-                        ? 'border-teal-500 bg-teal-50 text-teal-700'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}>
+                    className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.social_media_caption.wordCount === value ? activeLengthCls : inactiveLengthCls}`}>
                     <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-slate-400 mt-0.5">{hint}</span>
+                    <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
                   </button>
                 ))}
               </div>
@@ -371,28 +345,19 @@ export default function GenerateForm() {
             {error === 'CREDIT_BALANCE_LOW' ? (
               <>
                 API credit balance is too low.{' '}
-                <a
-                  href="https://console.anthropic.com/settings/billing"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline font-medium hover:text-red-800"
-                >
-                  Add credits in Anthropic Console →
+                <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noreferrer"
+                  className="underline font-medium hover:text-red-800">
+                  Add credits →
                 </a>
               </>
-            ) : (
-              error
-            )}
+            ) : error}
           </div>
         )}
 
         <button onClick={handleGenerate} disabled={loading || !canGenerate}
-          className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
+          className="w-full bg-[#1b3f2d] hover:bg-[#152e24] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 text-sm">
           {loading ? (
-            <>
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Generating...
-            </>
+            <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating…</>
           ) : 'Generate'}
         </button>
       </div>

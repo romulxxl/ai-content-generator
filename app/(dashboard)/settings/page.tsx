@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { User, Shield, LogOut, CreditCard, Save, ExternalLink, CheckCircle, Lock } from 'lucide-react'
 
 const inputCls =
-  'w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition'
+  'w-full px-4 py-2.5 border border-[#e8e4db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/20 focus:border-[#1b3f2d] transition bg-white text-[#1c1c17] placeholder:text-[#b0a89e]'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -103,29 +103,29 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-500 mt-1 text-sm">Manage your account</p>
+        <h1 className="font-display text-2xl font-bold text-[#1c1c17] tracking-tight">Settings</h1>
+        <p className="text-[#6b6660] mt-1 text-sm">Manage your account</p>
       </div>
 
       {/* Profile */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50">
-          <User className="w-4 h-4 text-slate-500" />
-          <h2 className="font-semibold text-slate-800 text-sm">Profile</h2>
+      <div className="bg-white rounded-xl border border-[#e8e4db] shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-[#eeebe3] bg-[#faf8f3]">
+          <User className="w-4 h-4 text-[#6b6660]" />
+          <h2 className="font-semibold text-[#1c1c17] text-sm">Profile</h2>
         </div>
         <div className="px-4 md:px-6 py-5 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-teal-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+            <div className="w-14 h-14 rounded-full bg-[#1b3f2d] flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
               {initials}
             </div>
             <div>
-              <p className="font-medium text-slate-900">{displayName || 'No name set'}</p>
-              <p className="text-sm text-slate-500">{email}</p>
+              <p className="font-medium text-[#1c1c17]">{displayName || 'No name set'}</p>
+              <p className="text-sm text-[#6b6660]">{email}</p>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Display Name</label>
+            <label className="block text-sm font-medium text-[#3d3d35] mb-1.5">Display Name</label>
             <input
               type="text"
               value={nameInput}
@@ -136,14 +136,14 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+            <label className="block text-sm font-medium text-[#3d3d35] mb-1.5">Email</label>
             <input
               type="email"
               value={email}
               disabled
-              className={`${inputCls} bg-slate-50 text-slate-400 cursor-not-allowed`}
+              className={`${inputCls} bg-[#faf8f3] text-[#a09890] cursor-not-allowed`}
             />
-            <p className="mt-1 text-xs text-slate-400">Email cannot be changed here</p>
+            <p className="mt-1 text-xs text-[#a09890]">Email cannot be changed here</p>
           </div>
 
           {profileError && (
@@ -153,7 +153,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSaveProfile}
             disabled={savingProfile || !profileLoaded || nameInput.trim() === displayName}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
+            className="flex items-center gap-2 px-4 py-2 bg-[#1b3f2d] hover:bg-[#152e24] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
           >
             {profileSaved ? (
               <><CheckCircle className="w-4 h-4" /> Saved!</>
@@ -165,20 +165,20 @@ export default function SettingsPage() {
       </div>
 
       {/* Security */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50">
-          <Shield className="w-4 h-4 text-slate-500" />
-          <h2 className="font-semibold text-slate-800 text-sm">Security</h2>
+      <div className="bg-white rounded-xl border border-[#e8e4db] shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-[#eeebe3] bg-[#faf8f3]">
+          <Shield className="w-4 h-4 text-[#6b6660]" />
+          <h2 className="font-semibold text-[#1c1c17] text-sm">Security</h2>
         </div>
         <div className="px-4 md:px-6 py-5 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-slate-900">Authentication</p>
-              <p className="text-sm text-slate-500">Managed via Supabase Auth — your session is secure</p>
+              <p className="text-sm font-medium text-[#1c1c17]">Authentication</p>
+              <p className="text-sm text-[#6b6660]">Managed via Supabase Auth — your session is secure</p>
             </div>
             <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium flex-shrink-0">Active</span>
           </div>
-          <div className="pt-2 border-t border-slate-100">
+          <div className="pt-2 border-t border-[#eeebe3]">
             <button
               onClick={handleSignOut}
               disabled={signOutLoading}
@@ -192,14 +192,14 @@ export default function SettingsPage() {
       </div>
 
       {/* Change Password */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50">
-          <Lock className="w-4 h-4 text-slate-500" />
-          <h2 className="font-semibold text-slate-800 text-sm">Change Password</h2>
+      <div className="bg-white rounded-xl border border-[#e8e4db] shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-[#eeebe3] bg-[#faf8f3]">
+          <Lock className="w-4 h-4 text-[#6b6660]" />
+          <h2 className="font-semibold text-[#1c1c17] text-sm">Change Password</h2>
         </div>
         <div className="px-4 md:px-6 py-5 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
+            <label className="block text-sm font-medium text-[#3d3d35] mb-1.5">New Password</label>
             <input
               type="password"
               value={newPassword}
@@ -209,7 +209,7 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm Password</label>
+            <label className="block text-sm font-medium text-[#3d3d35] mb-1.5">Confirm Password</label>
             <input
               type="password"
               value={confirmPassword}
@@ -226,7 +226,7 @@ export default function SettingsPage() {
           <button
             onClick={handleChangePassword}
             disabled={savingPassword || !newPassword || !confirmPassword}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
+            className="flex items-center gap-2 px-4 py-2 bg-[#1b3f2d] hover:bg-[#152e24] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
           >
             {passwordSaved ? (
               <><CheckCircle className="w-4 h-4" /> Password updated!</>
@@ -238,18 +238,18 @@ export default function SettingsPage() {
       </div>
 
       {/* Billing */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50">
-          <CreditCard className="w-4 h-4 text-slate-500" />
-          <h2 className="font-semibold text-slate-800 text-sm">API & Billing</h2>
+      <div className="bg-white rounded-xl border border-[#e8e4db] shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-4 md:px-6 py-4 border-b border-[#eeebe3] bg-[#faf8f3]">
+          <CreditCard className="w-4 h-4 text-[#6b6660]" />
+          <h2 className="font-semibold text-[#1c1c17] text-sm">API & Billing</h2>
         </div>
         <div className="px-4 md:px-6 py-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-900">Current Plan</p>
-              <p className="text-sm text-slate-500">Pay-as-you-go via Anthropic API</p>
+              <p className="text-sm font-medium text-[#1c1c17]">Current Plan</p>
+              <p className="text-sm text-[#6b6660]">Pay-as-you-go via Anthropic API</p>
             </div>
-            <span className="text-xs bg-teal-100 text-teal-700 px-2.5 py-1 rounded-full font-medium">API Key</span>
+            <span className="text-xs bg-[#e0f0e8] text-[#1b3f2d] px-2.5 py-1 rounded-full font-medium">API Key</span>
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
@@ -264,37 +264,37 @@ export default function SettingsPage() {
               href="https://console.anthropic.com/settings/billing"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-between w-full px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition group"
+              className="flex items-center justify-between w-full px-4 py-3 border border-[#e8e4db] rounded-lg hover:bg-[#faf8f3] transition group"
             >
               <div>
-                <p className="text-sm font-medium text-slate-900">Add Credits</p>
-                <p className="text-xs text-slate-500">Top up your Anthropic account balance</p>
+                <p className="text-sm font-medium text-[#1c1c17]">Add Credits</p>
+                <p className="text-xs text-[#6b6660]">Top up your Anthropic account balance</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-teal-600 transition" />
+              <ExternalLink className="w-4 h-4 text-[#a09890] group-hover:text-teal-600 transition" />
             </a>
             <a
               href="https://console.anthropic.com/settings/usage"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-between w-full px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition group"
+              className="flex items-center justify-between w-full px-4 py-3 border border-[#e8e4db] rounded-lg hover:bg-[#faf8f3] transition group"
             >
               <div>
-                <p className="text-sm font-medium text-slate-900">View Usage</p>
-                <p className="text-xs text-slate-500">See your API usage and spending</p>
+                <p className="text-sm font-medium text-[#1c1c17]">View Usage</p>
+                <p className="text-xs text-[#6b6660]">See your API usage and spending</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-teal-600 transition" />
+              <ExternalLink className="w-4 h-4 text-[#a09890] group-hover:text-teal-600 transition" />
             </a>
             <a
               href="https://console.anthropic.com/settings/keys"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-between w-full px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition group"
+              className="flex items-center justify-between w-full px-4 py-3 border border-[#e8e4db] rounded-lg hover:bg-[#faf8f3] transition group"
             >
               <div>
-                <p className="text-sm font-medium text-slate-900">Manage API Keys</p>
-                <p className="text-xs text-slate-500">Create or rotate your Anthropic API keys</p>
+                <p className="text-sm font-medium text-[#1c1c17]">Manage API Keys</p>
+                <p className="text-xs text-[#6b6660]">Create or rotate your Anthropic API keys</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-teal-600 transition" />
+              <ExternalLink className="w-4 h-4 text-[#a09890] group-hover:text-teal-600 transition" />
             </a>
           </div>
         </div>
@@ -302,3 +302,4 @@ export default function SettingsPage() {
     </div>
   )
 }
+

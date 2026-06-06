@@ -9,6 +9,7 @@ interface Generation {
   content_type: string
   inputs: Record<string, unknown>
   result: string
+  tokens_used?: number | null
   created_at: string
 }
 
@@ -58,10 +59,7 @@ export default function HistoryList() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="bg-white rounded-xl border border-slate-200 h-20 animate-pulse"
-          />
+          <div key={i} className="bg-white rounded-xl border border-[#e8e4db] h-20 animate-pulse" />
         ))}
       </div>
     )
@@ -78,13 +76,12 @@ export default function HistoryList() {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="bg-slate-100 p-5 rounded-2xl mb-4">
-          <FileText className="w-10 h-10 text-slate-400" />
+        <div className="bg-[#f0ede6] p-5 rounded-2xl mb-4">
+          <FileText className="w-10 h-10 text-[#a09890]" />
         </div>
-        <h3 className="text-lg font-semibold text-slate-700 mb-1">No generations yet</h3>
-        <p className="text-slate-400 text-sm max-w-xs leading-relaxed">
-          Head to <strong className="text-slate-500">Generate</strong> to create content and save
-          it to your history.
+        <h3 className="font-display text-lg font-bold text-[#1c1c17] mb-1">No generations yet</h3>
+        <p className="text-[#6b6660] text-sm max-w-xs leading-relaxed">
+          Head to <strong className="text-[#3d3d35]">Generate</strong> to create content and save it to your history.
         </p>
       </div>
     )
@@ -94,19 +91,16 @@ export default function HistoryList() {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-500">
-        Showing {items.length} of {total} generation{total !== 1 ? 's' : ''}
+      <p className="text-sm text-[#a09890]">
+        {items.length} of {total} generation{total !== 1 ? 's' : ''}
       </p>
       {items.map((item) => (
         <HistoryItem key={item.id} item={item} onDelete={handleDelete} />
       ))}
       {hasMore && (
-        <button
-          onClick={handleLoadMore}
-          disabled={loadingMore}
-          className="w-full py-2.5 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 transition"
-        >
-          {loadingMore ? 'Loading...' : `Load more (${total - items.length} remaining)`}
+        <button onClick={handleLoadMore} disabled={loadingMore}
+          className="w-full py-2.5 text-sm text-[#6b6660] border border-[#e8e4db] rounded-xl hover:bg-[#f5f2eb] disabled:opacity-50 transition bg-white">
+          {loadingMore ? 'Loading…' : `Load more (${total - items.length} remaining)`}
         </button>
       )}
     </div>
