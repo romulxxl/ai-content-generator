@@ -37,6 +37,9 @@ const initialForms: AllForms = {
 const inputCls  = 'w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition'
 const selectCls = 'w-full appearance-none px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white transition'
 
+const TOKEN_MARKER = '\n\n__TOKENS__:'
+const ERROR_MARKER = '\n\n__ERROR__:'
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -62,6 +65,7 @@ export default function GenerateForm() {
   const [variants, setVariants] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [tokensUsed, setTokensUsed] = useState<number | null>(null)
 
   const canGenerate = (() => {
     const f = forms[contentType]
@@ -82,6 +86,7 @@ export default function GenerateForm() {
     setLoading(true)
     setError(null)
     setResult('')
+    setTokensUsed(null)
 
     try {
       const response = await fetch('/api/generate', {
@@ -99,12 +104,32 @@ export default function GenerateForm() {
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
+      let accumulated = ''
 
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        setResult((prev) => prev + chunk)
+
+        accumulated += decoder.decode(value, { stream: true })
+
+        const tIdx = accumulated.lastIndexOf(TOKEN_MARKER)
+        if (tIdx !== -1) {
+          const n = parseInt(accumulated.slice(tIdx + TOKEN_MARKER.length), 10)
+          if (!isNaN(n)) setTokensUsed(n)
+          setResult(accumulated.slice(0, tIdx))
+          break
+        }
+
+        const eIdx = accumulated.lastIndexOf(ERROR_MARKER)
+        if (eIdx !== -1) {
+          const msg = accumulated.slice(eIdx + ERROR_MARKER.length).trim()
+          const isLowCredits = msg.includes('credit balance') || msg.includes('insufficient') || msg.includes('billing')
+          setError(isLowCredits ? 'CREDIT_BALANCE_LOW' : (msg || 'Generation failed. Please try again.'))
+          setResult(accumulated.slice(0, eIdx) || '')
+          break
+        }
+
+        setResult(accumulated)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed. Please try again.')
@@ -125,7 +150,7 @@ export default function GenerateForm() {
           <SelectWrapper>
             <select
               value={contentType}
-              onChange={(e) => { setContentType(e.target.value as ContentType); setResult(''); setVariants([]); setError(null) }}
+              onChange={(e) => { setContentType(e.target.value as ContentType); setResult(''); setVariants([]); setError(null); setTokensUsed(null) }}
               className={selectCls}
             >
               {CONTENT_TYPES.map((t) => (
@@ -343,7 +368,21 @@ export default function GenerateForm() {
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {error}
+            {error === 'CREDIT_BALANCE_LOW' ? (
+              <>
+                API credit balance is too low.{' '}
+                <a
+                  href="https://console.anthropic.com/settings/billing"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline font-medium hover:text-red-800"
+                >
+                  Add credits in Anthropic Console →
+                </a>
+              </>
+            ) : (
+              error
+            )}
           </div>
         )}
 
@@ -366,6 +405,7 @@ export default function GenerateForm() {
           contentType={contentType}
           inputs={forms[contentType] as ContentInputs}
           onRegenerate={handleGenerate}
+          tokensUsed={tokensUsed}
         />
       )}
     </div>

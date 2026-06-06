@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Copy, RefreshCw, Save, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Copy, RefreshCw, Save, CheckCircle, ChevronLeft, ChevronRight, Zap } from 'lucide-react'
 import type { ContentType, ContentInputs } from '@/lib/prompts'
+import MarkdownContent from '@/components/shared/MarkdownContent'
 
 interface ResultDisplayProps {
   result: string
@@ -11,17 +12,7 @@ interface ResultDisplayProps {
   contentType: ContentType
   inputs: ContentInputs
   onRegenerate: () => void
-}
-
-function wordCount(text: string) {
-  return text.trim().split(/\s+/).filter(Boolean).length
-}
-
-const WORD_RANGE: Record<ContentType, string> = {
-  product_description:  '50–400 words',
-  blog_post_outline:    '200–600 words',
-  email_composer:       '100–600 words',
-  social_media_caption: '20–300 words',
+  tokensUsed: number | null
 }
 
 export default function ResultDisplay({
@@ -31,6 +22,7 @@ export default function ResultDisplay({
   contentType,
   inputs,
   onRegenerate,
+  tokensUsed,
 }: ResultDisplayProps) {
   const [copied, setCopied] = useState(false)
   const [copyError, setCopyError] = useState(false)
@@ -39,12 +31,10 @@ export default function ResultDisplay({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [activeVariant, setActiveVariant] = useState<number | null>(null)
 
-  // When new generation starts, reset to current result view
   useEffect(() => {
     if (loading) setActiveVariant(null)
   }, [loading])
 
-  // When new variant arrives, reset to current
   useEffect(() => {
     setActiveVariant(null)
   }, [variants.length])
@@ -73,7 +63,7 @@ export default function ResultDisplay({
       const res = await fetch('/api/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType, inputs, result }),
+        body: JSON.stringify({ contentType, inputs, result, tokensUsed }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -88,20 +78,20 @@ export default function ResultDisplay({
     }
   }
 
-  const isError = displayText
-    ? /\[Error:\s*[\s\S]+?\]$/.test(displayText)
-    : false
-
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <h3 className="font-semibold text-slate-800 text-sm">Generated Result</h3>
-          {!loading && displayText && !isError && (
-            <span className="text-xs text-slate-400">
-              {wordCount(displayText)} words
-              <span className="ml-1 text-slate-300">/ rec. {WORD_RANGE[contentType]}</span>
+          {!loading && tokensUsed !== null && (
+            <span className="flex items-center gap-1 text-xs text-slate-400">
+              <Zap className="w-3 h-3 text-amber-400" />
+              {tokensUsed.toLocaleString()} tokens
             </span>
+          )}
+          {loading && !result && (
+            <span className="text-xs text-slate-400 animate-pulse">Generating…</span>
           )}
         </div>
 
@@ -126,7 +116,7 @@ export default function ResultDisplay({
             <button
               onClick={onRegenerate}
               aria-label="Regenerate content"
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-gray-600"
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition text-slate-600"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Regenerate
@@ -142,7 +132,7 @@ export default function ResultDisplay({
               ) : (
                 <Save className="w-3.5 h-3.5" />
               )}
-              {saved ? 'Saved!' : saving ? 'Saving...' : 'Save to History'}
+              {saved ? 'Saved!' : saving ? 'Saving…' : 'Save to History'}
             </button>
           </div>
         )}
@@ -174,45 +164,23 @@ export default function ResultDisplay({
         </div>
       )}
 
-      <div className="p-6 min-h-[100px]">
+      {/* Content area */}
+      <div className="p-6 min-h-[120px]">
         {loading && !result && (
-          <div className="flex items-center gap-3 text-gray-400">
+          <div className="flex items-center gap-3 text-slate-400">
             <span className="w-4 h-4 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin inline-block" />
-            <span className="text-sm">Claude is generating...</span>
+            <span className="text-sm">Claude is generating…</span>
           </div>
         )}
 
-        {displayText && (() => {
-          const errorMatch = displayText.match(/\[Error:\s*([\s\S]+?)\]$/)
-          if (errorMatch) {
-            const msg = errorMatch[1].trim()
-            const isLowCredits = msg.includes('credit balance')
-            return (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-red-700 mb-1">Generation failed</p>
-                {isLowCredits ? (
-                  <p className="text-sm text-red-600">
-                    Your Anthropic API credit balance is too low.{' '}
-                    <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noreferrer"
-                      className="underline font-medium hover:text-red-700">
-                      Add credits in Anthropic Console →
-                    </a>
-                  </p>
-                ) : (
-                  <p className="text-sm text-red-600">{msg}</p>
-                )}
-              </div>
-            )
-          }
-          return (
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800 leading-relaxed">
-              {displayText}
-              {loading && activeVariant === null && (
-                <span className="inline-block w-2 h-4 bg-teal-600 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
-              )}
-            </pre>
-          )
-        })()}
+        {displayText && (
+          <div className="relative">
+            <MarkdownContent content={displayText} />
+            {loading && activeVariant === null && (
+              <span className="inline-block w-2 h-4 bg-teal-600 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
+            )}
+          </div>
+        )}
 
         {saveError && (
           <p className="mt-3 text-sm text-red-600 border-t border-red-100 pt-3">

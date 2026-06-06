@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
   const { data, error, count } = await supabase
     .from('generations')
-    .select('id, content_type, inputs, result, created_at', { count: 'exact' })
+    .select('id, content_type, inputs, result, tokens_used, created_at', { count: 'exact' })
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
@@ -53,14 +53,14 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { contentType: unknown; inputs: unknown; result: unknown }
+  let body: { contentType: unknown; inputs: unknown; result: unknown; tokensUsed?: unknown }
   try {
     body = await request.json()
   } catch {
     return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { contentType, inputs, result } = body
+  const { contentType, inputs, result, tokensUsed } = body
 
   if (!isValidContentType(contentType)) {
     return Response.json({ error: 'Invalid content type' }, { status: 400 })
@@ -70,6 +70,8 @@ export async function POST(request: Request) {
     return Response.json({ error: 'result is required and must be a string' }, { status: 400 })
   }
 
+  const tokensUsedValue = typeof tokensUsed === 'number' && tokensUsed > 0 ? tokensUsed : null
+
   const { data, error } = await supabase
     .from('generations')
     .insert({
@@ -77,6 +79,7 @@ export async function POST(request: Request) {
       content_type: contentType,
       inputs: (inputs && typeof inputs === 'object') ? inputs : {},
       result,
+      tokens_used: tokensUsedValue,
     })
     .select()
     .single()

@@ -69,10 +69,10 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
         '3. Every key feature listed (' + i.keyFeatures.join(', ') + ') must appear in the text at least once — either the exact word or a direct synonym. Do not ignore any of them.\n' +
         '4. Do not compare the product to other brands or products. Write about it on its own merits.\n' +
         '5. Strictly respect the length target above. Do not exceed it or fall significantly short.\n' +
-        '6. End with a short, natural call to action that fits the tone (e.g. "Order today.", "Try it now.", "See what it can do for you." — adapt to the context).\n' +
-        '7. Avoid clichés. Do not use these phrases: "feels great in your hand", "staying power", "flagship-level", "without breaking the bank", "day-to-day", "game-changer", "state-of-the-art", "seamless experience", "intuitive design", "best of both worlds".\n' +
+        '6. End with a short, natural call to action that fits the tone.\n' +
+        '7. Avoid clichés: "feels great in your hand", "staying power", "flagship-level", "without breaking the bank", "game-changer", "state-of-the-art", "seamless experience", "intuitive design".\n' +
         '8. Do not include a title — just the description text.\n' +
-        '9. Use plain text only. No markdown: no hashtags (#), no asterisks (*), no underscores (_). To emphasize a word or phrase, wrap it in double quotes.\n' +
+        '9. Formatting: use **bold** to highlight the 2–3 most important key features inline in the text. Keep the output as flowing prose — no headers, no bullet lists.\n' +
         '10. Respond in the same language as the product name and key features are written in.'
       )
     }
@@ -89,17 +89,16 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
         'Target audience: ' + i.targetAudience + '\n' +
         'Article scope: ' + sections + ', target length for the full article — ' + words + '\n\n' +
         'FORMATTING RULES:\n' +
-        '1. Respond fully in the same language as the topic is written in. If the topic is in Ukrainian, write everything in Ukrainian, including section names (not "Title" but the local equivalent, not "Introduction Hook" but the local equivalent, etc.).\n' +
-        '2. No markdown symbols: no hashtags (#), no asterisks (*), no underscores (_).\n' +
-        '3. Number main sections with digits and a period (1. 2. 3.); use letters or indented dashes for sub-points.\n' +
-        '4. To emphasize text, use quotation marks.\n' +
-        '5. For each section, indicate the approximate word count so the total adds up to ' + words + '.\n\n' +
+        '1. Respond fully in the same language as the topic is written in.\n' +
+        '2. Use Markdown: ## for main section headers, ### for subsections, **bold** for key points, - for bullet sub-points.\n' +
+        '3. For each section, indicate the approximate word count in parentheses so the total adds up to ' + words + '.\n' +
+        '4. Do not use raw asterisks or underscores as decorative elements — only for Markdown bold/italic.\n\n' +
         'OUTLINE STRUCTURE:\n' +
-        'Title\n' +
-        'Opening hook\n' +
-        'Main sections with sub-points (' + sections + ')\n' +
-        'Conclusion\n' +
-        'Call to action'
+        '## Title\n' +
+        '## Opening hook\n' +
+        '## Main sections with sub-points (' + sections + ')\n' +
+        '## Conclusion\n' +
+        '## Call to action'
       )
     }
     case 'email_composer': {
@@ -126,14 +125,14 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
           : '') +
         '\nRespond in the same language as the email purpose is written in.\n\n' +
         'STRUCTURE:\n' +
-        '1. Subject line (Subject:) — concise and specific, under 60 characters.\n' +
+        '1. **Subject:** — concise and specific, under 60 characters. Bold the "Subject:" label.\n' +
         '2. Greeting.\n' +
         '3. Body — flowing paragraphs, not a bullet list. Weave each key point naturally into the text.\n' +
         '4. Clear call to action.\n' +
         '5. Sign-off on behalf of the company.\n\n' +
         'RULES:\n' +
-        '- No markdown: no asterisks, hashtags, or underscores.\n' +
-        '- Put the "Subject:" line first, separate from the email body.\n' +
+        '- Minimal formatting: only **bold** the Subject label and any single critical term if needed. No headers.\n' +
+        '- Put the Subject line first, separate from the email body.\n' +
         '- Do not start consecutive paragraphs with "I" or the company name.'
       )
     }
@@ -146,7 +145,6 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
         facebook: 'Facebook',
       }
 
-      // Word count targets per platform per size
       const wordCountGuide: Record<string, Record<string, string>> = {
         instagram: {
           micro:  '30-50 слів — одна сильна думка, максимум концентрації',
@@ -177,8 +175,8 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
       const platformRules: Record<string, string> = {
         instagram: 'Додай доречні емодзі (не перестарайся). Роби короткі абзаци — 1-2 речення. Завершуй 3-5 релевантними хештегами окремим рядком.',
         linkedin:  'Короткі абзаци з пробілом між ними. Без емодзі або мінімум. Можна 1-2 хештеги в кінці. Заклик до дії або питання в кінці.',
-        twitter:   'Без markdown. Максимум 1-2 хештеги якщо доречно.',
-        facebook:  'Природній розмовний стиль. Можна 1-2 емодзі якщо тон дозволяє. Завершуй питанням або закликом залишити коментар — це підвищує охоплення. Хештеги не обов\'язкові, але можна 1-2.',
+        twitter:   'Без жодного markdown-синтаксису. Максимум 1-2 хештеги якщо доречно.',
+        facebook:  'Природній розмовний стиль. Можна 1-2 емодзі якщо тон дозволяє. Завершуй питанням або закликом залишити коментар. Хештеги не обов\'язкові, але можна 1-2.',
       }
 
       return (
@@ -188,11 +186,11 @@ export function buildPrompt(contentType: ContentType, inputs: ContentInputs): st
         'Обсяг: ' + wordCountGuide[i.platform][i.wordCount] + '\n\n' +
         'Відповідай тією мовою, якою написана тема.\n\n' +
         'ОБОВ\'ЯЗКОВА СТРУКТУРА:\n' +
-        '1. ХУК (перший рядок) — зупиняє скролінг. Це може бути провокативне твердження, несподіваний факт, питання або сильна цитата. Не починай з "Я", не використовуй кліше типу "У сучасному світі".\n' +
+        '1. ХУК (перший рядок) — зупиняє скролінг. Провокативне твердження, несподіваний факт, питання або сильна цитата. Не починай з "Я", не використовуй кліше типу "У сучасному світі".\n' +
         '2. РОЗВИТОК — зв\'язний, плавний текст (не список тез). Розкривай думку через конкретику, деталі або короткий сторітелінг.\n' +
         '3. ВИСНОВОК / ЗАКЛИК — сильна фінальна думка або дія.\n\n' +
-        'Правила платформи: ' + platformRules[i.platform] + '\n' +
-        'Без markdown символів у тексті: без решіток (#) поза хештегами, без зірочок, без підкреслень.'
+        'ВАЖЛИВО щодо форматування: соціальні мережі не рендерять markdown. НЕ використовуй ##, **, _, або інші markdown-символи в тексті. Хештеги (#слово) — це виняток і не є markdown. Використовуй тільки звичайний текст, абзаци і емодзі якщо дозволяє тон.\n\n' +
+        'Правила платформи: ' + platformRules[i.platform]
       )
     }
     default:

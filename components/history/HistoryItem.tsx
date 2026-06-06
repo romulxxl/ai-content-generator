@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Trash2, Copy, CheckCircle, AlertCircle } from 'lucide-react'
+import { ChevronDown, ChevronUp, Trash2, Copy, CheckCircle, AlertCircle, Zap } from 'lucide-react'
+import MarkdownContent from '@/components/shared/MarkdownContent'
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
   product_description:  'Product Description',
@@ -15,6 +16,7 @@ interface Generation {
   content_type: string
   inputs: Record<string, unknown>
   result: string
+  tokens_used?: number | null
   created_at: string
 }
 
@@ -74,8 +76,15 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
     minute: '2-digit',
   })
 
-  const preview =
-    item.result.length > 100 ? item.result.slice(0, 100) + '…' : item.result
+  // Strip markdown for preview text
+  const previewText = item.result
+    .replace(/#{1,6}\s/g, '')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/`/g, '')
+    .replace(/\n/g, ' ')
+    .trim()
+  const preview = previewText.length > 120 ? previewText.slice(0, 120) + '…' : previewText
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -89,6 +98,12 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
               {CONTENT_TYPE_LABELS[item.content_type] || item.content_type}
             </span>
             <span className="text-xs text-slate-400">{date}</span>
+            {item.tokens_used != null && (
+              <span className="flex items-center gap-0.5 text-xs text-slate-400">
+                <Zap className="w-3 h-3 text-amber-400" />
+                {item.tokens_used.toLocaleString()}
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-600 truncate">{preview}</p>
         </div>
@@ -143,9 +158,7 @@ export default function HistoryItem({ item, onDelete }: HistoryItemProps) {
 
       {expanded && (
         <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
-          <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800 leading-relaxed">
-            {item.result}
-          </pre>
+          <MarkdownContent content={item.result} />
         </div>
       )}
     </div>

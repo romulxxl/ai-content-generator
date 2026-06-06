@@ -7,7 +7,6 @@ import type { ContentType, ContentInputs } from '@/lib/prompts'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-
 const MAX_TOKENS: Record<ContentType, Record<string, number>> = {
   product_description:  { teaser: 200, standard: 400, extended: 700 },
   blog_post_outline:    { short: 900, medium: 1800, long: 3500 },
@@ -34,6 +33,9 @@ function sanitizeInputs(inputs: unknown): ContentInputs {
   }
   return sanitized as unknown as ContentInputs
 }
+
+const TOKEN_MARKER = '\n\n__TOKENS__:'
+const ERROR_MARKER = '\n\n__ERROR__:'
 
 export async function POST(request: Request) {
   try {
@@ -85,18 +87,51 @@ export async function POST(request: Request) {
     const lengthKey = (inp.wordCount ?? inp.desiredLength ?? inp.emailLength ?? 'standard') as string
     const maxTokens = MAX_TOKENS[contentType][lengthKey] ?? 1500
 
+    const userId = user.id
+    const db = supabase
     const anthropic = createAnthropic({ apiKey })
     const prompt = buildPrompt(contentType, inputs)
 
-    const result = streamText({
+    const streamResult = streamText({
       model: anthropic('claude-sonnet-4-6'),
-      system: 'You write clean, plain text content. Never use markdown formatting: no # headers, no ** or * for bold/italic, no _ underscores, no bullet dashes unless explicitly part of a list structure. To emphasize text, use double quotes. Keep the output minimal and readable.',
+      system:
+        'You are a professional content writer. Use Markdown formatting where it adds clarity: ' +
+        '## and ### for section headers in structured content (outlines, reports), ' +
+        '**bold** for key terms and emphasis, bullet or numbered lists for structured information. ' +
+        'For flowing prose (product descriptions, emails, social captions), keep formatting minimal — ' +
+        'prioritise readability over markup. Always match the language of the user\'s request.',
       messages: [{ role: 'user', content: prompt }],
       maxOutputTokens: maxTokens,
     })
 
-    return result.toTextStreamResponse({
+    const encoder = new TextEncoder()
+    const body = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of streamResult.textStream) {
+            controller.enqueue(encoder.encode(chunk))
+          }
+          const usage = await streamResult.usage
+          const tokens = (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0)
+          if (tokens > 0) {
+            controller.enqueue(encoder.encode(TOKEN_MARKER + tokens))
+            db.rpc('increment_user_usage', { p_user_id: userId, p_tokens: tokens })
+              .then(({ error: rpcErr }) => {
+                if (rpcErr) console.error('[generate] usage tracking failed:', rpcErr.message)
+              })
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'Generation error'
+          controller.enqueue(encoder.encode(ERROR_MARKER + msg))
+        } finally {
+          controller.close()
+        }
+      },
+    })
+
+    return new Response(body, {
       headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache, no-transform',
         'X-Content-Type-Options': 'nosniff',
       },
