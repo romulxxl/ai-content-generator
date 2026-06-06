@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Wand2 } from 'lucide-react'
 import TagInput from './TagInput'
 import ResultDisplay from './ResultDisplay'
@@ -129,7 +130,7 @@ export default function GenerateForm() {
           setError(msg.includes('credit balance') || msg.includes('insufficient') ? 'CREDIT_BALANCE_LOW' : (msg || 'Generation failed'))
           setResult(accumulated.slice(0, eIdx) || ''); break
         }
-        setResult(accumulated)
+        flushSync(() => setResult(accumulated))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed. Please try again.')

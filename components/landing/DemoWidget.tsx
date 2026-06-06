@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Zap, RefreshCw, Copy, CheckCircle, ArrowRight, Wand2 } from 'lucide-react'
 import MarkdownContent from '@/components/shared/MarkdownContent'
 
@@ -117,7 +118,7 @@ export default function DemoWidget() {
         if (tIdx !== -1) { const n = parseInt(accumulated.slice(tIdx + TOKEN_MARKER.length), 10); if (!isNaN(n)) setTokensUsed(n); setResult(accumulated.slice(0, tIdx)); break }
         const eIdx = accumulated.lastIndexOf(ERROR_MARKER)
         if (eIdx !== -1) { setError(accumulated.slice(eIdx + ERROR_MARKER.length).trim() || 'Generation failed'); setResult(''); break }
-        setResult(accumulated)
+        flushSync(() => setResult(accumulated))
       }
     } catch (err) { setError(err instanceof Error ? err.message : 'Generation failed') }
     finally { setLoading(false) }
