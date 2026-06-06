@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { Wand2 } from 'lucide-react'
 import TagInput from './TagInput'
 import ResultDisplay from './ResultDisplay'
 import type {
@@ -13,11 +13,11 @@ import type {
   SocialMediaInputs,
 } from '@/lib/prompts'
 
-const CONTENT_TYPES: { value: ContentType; label: string; description: string }[] = [
-  { value: 'product_description',  label: 'Product Description', description: 'sales-ready copy for product pages & landing pages' },
-  { value: 'blog_post_outline',    label: 'Blog Blueprint',      description: 'structured article plan from headline to conclusion' },
-  { value: 'email_composer',       label: 'Email Composer',      description: 'complete email for any business or marketing goal' },
-  { value: 'social_media_caption', label: 'Social Post',         description: 'ready-to-publish posts for any social media platform' },
+const TABS: { value: ContentType; label: string }[] = [
+  { value: 'product_description',  label: 'Product' },
+  { value: 'blog_post_outline',    label: 'Blog' },
+  { value: 'email_composer',       label: 'Email' },
+  { value: 'social_media_caption', label: 'Social' },
 ]
 
 type AllForms = {
@@ -34,32 +34,33 @@ const initialForms: AllForms = {
   social_media_caption: { platform: 'instagram', topic: '', tone: 'casual', wordCount: 'short' },
 }
 
-const inputCls  = 'w-full px-4 py-2.5 border border-[#e8e4db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/20 focus:border-[#1b3f2d] transition bg-white text-[#1c1c17] placeholder:text-[#b0a89e]'
-const selectCls = 'w-full appearance-none px-4 py-2.5 border border-[#e8e4db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/20 focus:border-[#1b3f2d] bg-white transition text-[#1c1c17]'
-
 const TOKEN_MARKER = '\n\n__TOKENS__:'
 const ERROR_MARKER = '\n\n__ERROR__:'
+
+const inputCls = 'w-full px-4 py-2.5 border border-[#e8e4db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/20 focus:border-[#1b3f2d] transition bg-white text-[#1c1c17] placeholder:text-[#b0a89e]'
+
+const activeLengthCls   = 'border-[#1b3f2d] bg-[#f0f7f3] text-[#1b3f2d]'
+const inactiveLengthCls = 'border-[#e8e4db] bg-white text-[#6b6660] hover:border-[#1b3f2d] hover:text-[#1b3f2d]'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[#3d3d35] mb-1.5">{label}</label>
+      <label className="block text-[11px] font-semibold text-[#a09890] mb-1.5 uppercase tracking-wider">{label}</label>
       {children}
     </div>
   )
 }
 
-function SelectWrapper({ children }: { children: React.ReactNode }) {
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <div className="relative">
-      {children}
-      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a09890] pointer-events-none" />
-    </div>
+    <button type="button" onClick={onClick}
+      className={`text-xs px-3 py-1.5 rounded-md border font-medium transition whitespace-nowrap ${
+        active ? 'border-[#1b3f2d] bg-[#1b3f2d] text-white' : 'border-[#e8e4db] text-[#6b6660] hover:border-[#1b3f2d] hover:text-[#1b3f2d]'
+      }`}>
+      {label}
+    </button>
   )
 }
-
-const activeLengthCls = 'border-[#1b3f2d] bg-[#f0f7f3] text-[#1b3f2d]'
-const inactiveLengthCls = 'border-[#e8e4db] bg-white text-[#6b6660] hover:border-[#1b3f2d] hover:text-[#1b3f2d]'
 
 export default function GenerateForm() {
   const [contentType, setContentType] = useState<ContentType>('product_description')
@@ -81,15 +82,20 @@ export default function GenerateForm() {
   })()
 
   function update<T extends ContentType>(type: T, patch: Partial<AllForms[T]>) {
-    setForms((prev) => ({ ...prev, [type]: { ...prev[type], ...patch } }))
+    setForms(prev => ({ ...prev, [type]: { ...prev[type], ...patch } }))
+  }
+
+  const handleTabChange = (tab: ContentType) => {
+    setContentType(tab)
+    setResult('')
+    setVariants([])
+    setError(null)
+    setTokensUsed(null)
   }
 
   const handleGenerate = async () => {
-    if (result) setVariants((prev) => [...prev.slice(-4), result])
-    setLoading(true)
-    setError(null)
-    setResult('')
-    setTokensUsed(null)
+    if (result) setVariants(prev => [...prev.slice(-4), result])
+    setLoading(true); setError(null); setResult(''); setTokensUsed(null)
 
     try {
       const response = await fetch('/api/generate', {
@@ -97,12 +103,10 @@ export default function GenerateForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contentType, inputs: forms[contentType] }),
       })
-
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
         throw new Error((data as { error?: string }).error || 'Request failed with status ' + response.status)
       }
-
       if (!response.body) throw new Error('No response body')
 
       const reader = response.body.getReader()
@@ -113,21 +117,17 @@ export default function GenerateForm() {
         const { done, value } = await reader.read()
         if (done) break
         accumulated += decoder.decode(value, { stream: true })
-
         const tIdx = accumulated.lastIndexOf(TOKEN_MARKER)
         if (tIdx !== -1) {
           const n = parseInt(accumulated.slice(tIdx + TOKEN_MARKER.length), 10)
           if (!isNaN(n)) setTokensUsed(n)
-          setResult(accumulated.slice(0, tIdx))
-          break
+          setResult(accumulated.slice(0, tIdx)); break
         }
         const eIdx = accumulated.lastIndexOf(ERROR_MARKER)
         if (eIdx !== -1) {
           const msg = accumulated.slice(eIdx + ERROR_MARKER.length).trim()
-          const isLowCredits = msg.includes('credit balance') || msg.includes('insufficient') || msg.includes('billing')
-          setError(isLowCredits ? 'CREDIT_BALANCE_LOW' : (msg || 'Generation failed. Please try again.'))
-          setResult(accumulated.slice(0, eIdx) || '')
-          break
+          setError(msg.includes('credit balance') || msg.includes('insufficient') ? 'CREDIT_BALANCE_LOW' : (msg || 'Generation failed'))
+          setResult(accumulated.slice(0, eIdx) || ''); break
         }
         setResult(accumulated)
       }
@@ -139,240 +139,240 @@ export default function GenerateForm() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div>
+    <div className="max-w-5xl mx-auto">
+      {/* Page header */}
+      <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-[#1c1c17] tracking-tight">Generate Content</h1>
         <p className="text-[#6b6660] mt-1 text-sm">Select a content type and fill in the details</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#e8e4db] p-4 md:p-6 shadow-[0_1px_8px_0_rgba(0,0,0,0.04)] space-y-5">
-        <Field label="Content Type">
-          <SelectWrapper>
-            <select
-              value={contentType}
-              onChange={(e) => { setContentType(e.target.value as ContentType); setResult(''); setVariants([]); setError(null); setTokensUsed(null) }}
-              className={selectCls}
-            >
-              {CONTENT_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>{t.label} — {t.description}</option>
-              ))}
-            </select>
-          </SelectWrapper>
-        </Field>
+      {/* Two-column canvas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-        {/* ── Product Description ── */}
-        {contentType === 'product_description' && (
-          <>
-            <Field label="Product Name">
-              <input type="text" value={forms.product_description.productName}
-                onChange={(e) => update('product_description', { productName: e.target.value })}
-                className={inputCls} placeholder="e.g. EcoBottle Pro" />
-            </Field>
-            <Field label="Key Features (press Enter or comma to add)">
-              <TagInput tags={forms.product_description.keyFeatures}
-                onChange={(keyFeatures) => update('product_description', { keyFeatures })}
-                placeholder="e.g. Stainless steel, 24oz, BPA-free..." />
-            </Field>
-            <Field label="Tone">
-              <SelectWrapper>
-                <select value={forms.product_description.tone}
-                  onChange={(e) => update('product_description', { tone: e.target.value as ProductDescriptionInputs['tone'] })}
-                  className={selectCls}>
-                  <option value="formal">Formal</option>
-                  <option value="casual">Casual</option>
-                  <option value="playful">Playful</option>
-                  <option value="authoritative">Authoritative</option>
-                  <option value="urgent">Urgent / FOMO</option>
-                  <option value="empathetic">Empathetic</option>
-                  <option value="minimalist">Minimalist</option>
-                </select>
-              </SelectWrapper>
-            </Field>
-            <Field label="Length">
-              <div className="grid grid-cols-3 gap-2">
-                {([
-                  { value: 'teaser',   label: 'Teaser',   hint: '50–80 words' },
-                  { value: 'standard', label: 'Standard', hint: '120–200 words' },
-                  { value: 'extended', label: 'Extended', hint: '250–400 words' },
-                ] as const).map(({ value, label, hint }) => (
-                  <button key={value} type="button"
-                    onClick={() => update('product_description', { wordCount: value })}
-                    className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.product_description.wordCount === value ? activeLengthCls : inactiveLengthCls}`}>
-                    <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
-                  </button>
-                ))}
-              </div>
-            </Field>
-          </>
-        )}
+        {/* ── Left: Form card ── */}
+        <div className="bg-white rounded-xl border border-[#e8e4db] shadow-[0_1px_8px_0_rgba(0,0,0,0.04)] overflow-hidden">
 
-        {/* ── Blog Blueprint ── */}
-        {contentType === 'blog_post_outline' && (
-          <>
-            <Field label="Topic">
-              <input type="text" value={forms.blog_post_outline.topic}
-                onChange={(e) => update('blog_post_outline', { topic: e.target.value })}
-                className={inputCls} placeholder="e.g. Benefits of remote work for small businesses" />
-            </Field>
-            <Field label="Target Audience">
-              <input type="text" value={forms.blog_post_outline.targetAudience}
-                onChange={(e) => update('blog_post_outline', { targetAudience: e.target.value })}
-                className={inputCls} placeholder="e.g. Small business owners, 30-50 years old" />
-            </Field>
-            <Field label="Article Scope">
-              <div className="grid grid-cols-3 gap-2">
-                {([
-                  { value: 'short',  label: 'Overview',      hint: '5–7 sections / ~500 words' },
-                  { value: 'medium', label: 'Standard',      hint: '7–10 sections / ~1 000 words' },
-                  { value: 'long',   label: 'Comprehensive', hint: '10–15 sections / ~2 000 words' },
-                ] as const).map(({ value, label, hint }) => (
-                  <button key={value} type="button"
-                    onClick={() => update('blog_post_outline', { desiredLength: value })}
-                    className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.blog_post_outline.desiredLength === value ? activeLengthCls : inactiveLengthCls}`}>
-                    <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
-                  </button>
-                ))}
-              </div>
-            </Field>
-          </>
-        )}
-
-        {/* ── Email Composer ── */}
-        {contentType === 'email_composer' && (
-          <>
-            <Field label="Company / Sender Name">
-              <input type="text" value={forms.email_composer.companyName}
-                onChange={(e) => update('email_composer', { companyName: e.target.value })}
-                className={inputCls} placeholder="e.g. Acme Corp, John from Support" />
-            </Field>
-            <Field label="Email Purpose">
-              <input type="text" value={forms.email_composer.emailPurpose}
-                onChange={(e) => update('email_composer', { emailPurpose: e.target.value })}
-                className={inputCls} placeholder="e.g. Invite to a product demo, announce a pricing change" />
-            </Field>
-            <Field label="Style">
-              <SelectWrapper>
-                <select value={forms.email_composer.emailStyle}
-                  onChange={(e) => update('email_composer', { emailStyle: e.target.value as EmailInputs['emailStyle'] })}
-                  className={selectCls}>
-                  <option value="formal">Formal — precise & professional</option>
-                  <option value="friendly">Friendly — warm & approachable</option>
-                  <option value="persuasive">Persuasive — benefit-focused, action-driving</option>
-                  <option value="direct">Direct — straight to the point</option>
-                  <option value="empathetic">Empathetic — understanding & supportive</option>
-                </select>
-              </SelectWrapper>
-            </Field>
-            <Field label="Email Length">
-              <div className="grid grid-cols-3 gap-2">
-                {([
-                  { value: 'brief',    label: 'Brief',    hint: '100–180 words' },
-                  { value: 'standard', label: 'Standard', hint: '200–350 words' },
-                  { value: 'detailed', label: 'Detailed', hint: '400–600 words' },
-                ] as const).map(({ value, label, hint }) => (
-                  <button key={value} type="button"
-                    onClick={() => update('email_composer', { emailLength: value })}
-                    className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.email_composer.emailLength === value ? activeLengthCls : inactiveLengthCls}`}>
-                    <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
-                  </button>
-                ))}
-              </div>
-            </Field>
-            <Field label="Key Points to Highlight (press Enter or comma to add)">
-              <TagInput tags={forms.email_composer.keyPoints}
-                onChange={(keyPoints) => update('email_composer', { keyPoints })}
-                placeholder="e.g. 20% discount, Friday deadline, free trial..." />
-            </Field>
-          </>
-        )}
-
-        {/* ── Social Post ── */}
-        {contentType === 'social_media_caption' && (
-          <>
-            <Field label="Platform">
-              <SelectWrapper>
-                <select value={forms.social_media_caption.platform}
-                  onChange={(e) => update('social_media_caption', { platform: e.target.value as SocialMediaInputs['platform'] })}
-                  className={selectCls}>
-                  <option value="instagram">Instagram</option>
-                  <option value="linkedin">LinkedIn</option>
-                  <option value="twitter">Twitter / X</option>
-                  <option value="facebook">Facebook</option>
-                </select>
-              </SelectWrapper>
-            </Field>
-            <Field label="Topic">
-              <input type="text" value={forms.social_media_caption.topic}
-                onChange={(e) => update('social_media_caption', { topic: e.target.value })}
-                className={inputCls} placeholder="e.g. New product launch, company milestone" />
-            </Field>
-            <Field label="Tone">
-              <SelectWrapper>
-                <select value={forms.social_media_caption.tone}
-                  onChange={(e) => update('social_media_caption', { tone: e.target.value as SocialMediaInputs['tone'] })}
-                  className={selectCls}>
-                  <option value="professional">Professional</option>
-                  <option value="casual">Casual</option>
-                  <option value="fun">Fun</option>
-                </select>
-              </SelectWrapper>
-            </Field>
-            <Field label="Post Length">
-              <div className="grid grid-cols-2 gap-2">
-                {([
-                  { value: 'micro',  label: 'Micro',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 140 chars' : 'up to 50 words' },
-                  { value: 'short',  label: 'Short',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 220 chars' : '60–90 words' },
-                  { value: 'medium', label: 'Medium', hint: forms.social_media_caption.platform === 'twitter' ? 'up to 280 chars' : '120–180 words' },
-                  { value: 'long',   label: 'Long',   hint: forms.social_media_caption.platform === 'twitter' ? '3–4 tweet thread' : '220–300 words' },
-                ] as const).map(({ value, label, hint }) => (
-                  <button key={value} type="button"
-                    onClick={() => update('social_media_caption', { wordCount: value })}
-                    className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.social_media_caption.wordCount === value ? activeLengthCls : inactiveLengthCls}`}>
-                    <span className="block text-sm font-medium">{label}</span>
-                    <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
-                  </button>
-                ))}
-              </div>
-            </Field>
-          </>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {error === 'CREDIT_BALANCE_LOW' ? (
-              <>
-                API credit balance is too low.{' '}
-                <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noreferrer"
-                  className="underline font-medium hover:text-red-800">
-                  Add credits →
-                </a>
-              </>
-            ) : error}
+          {/* Content type tabs */}
+          <div className="grid grid-cols-4 border-b border-[#e8e4db]">
+            {TABS.map(tab => (
+              <button key={tab.value} onClick={() => handleTabChange(tab.value)}
+                className={`py-3 text-xs font-semibold tracking-wide transition border-b-2 ${
+                  contentType === tab.value
+                    ? 'border-[#1b3f2d] text-[#1b3f2d] bg-white'
+                    : 'border-transparent text-[#a09890] hover:text-[#6b6660] bg-[#faf8f3]/60 hover:bg-white/80'
+                }`}>
+                {tab.label}
+              </button>
+            ))}
           </div>
-        )}
 
-        <button onClick={handleGenerate} disabled={loading || !canGenerate}
-          className="w-full bg-[#1b3f2d] hover:bg-[#152e24] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 text-sm">
-          {loading ? (
-            <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating…</>
-          ) : 'Generate'}
-        </button>
+          {/* Form fields */}
+          <div className="p-5 space-y-5">
+
+            {/* ── Product Description ── */}
+            {contentType === 'product_description' && (<>
+              <Field label="Product Name">
+                <input type="text" value={forms.product_description.productName}
+                  onChange={e => update('product_description', { productName: e.target.value })}
+                  className={inputCls} placeholder="e.g. EcoBottle Pro" />
+              </Field>
+              <Field label="Key Features (Enter or comma to add)">
+                <TagInput tags={forms.product_description.keyFeatures}
+                  onChange={keyFeatures => update('product_description', { keyFeatures })}
+                  placeholder="e.g. Stainless steel, 24oz, BPA-free..." />
+              </Field>
+              <Field label="Tone">
+                <div className="flex flex-wrap gap-1.5">
+                  {(['formal','casual','playful','authoritative','urgent','empathetic','minimalist'] as const).map(t => (
+                    <Chip key={t} label={t.charAt(0).toUpperCase() + t.slice(1)}
+                      active={forms.product_description.tone === t}
+                      onClick={() => update('product_description', { tone: t })} />
+                  ))}
+                </div>
+              </Field>
+              <Field label="Length">
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { value: 'teaser',   label: 'Teaser',   hint: '50–80 words' },
+                    { value: 'standard', label: 'Standard', hint: '120–200 words' },
+                    { value: 'extended', label: 'Extended', hint: '250–400 words' },
+                  ] as const).map(({ value, label, hint }) => (
+                    <button key={value} type="button" onClick={() => update('product_description', { wordCount: value })}
+                      className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.product_description.wordCount === value ? activeLengthCls : inactiveLengthCls}`}>
+                      <span className="block text-sm font-medium">{label}</span>
+                      <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            </>)}
+
+            {/* ── Blog Blueprint ── */}
+            {contentType === 'blog_post_outline' && (<>
+              <Field label="Topic">
+                <input type="text" value={forms.blog_post_outline.topic}
+                  onChange={e => update('blog_post_outline', { topic: e.target.value })}
+                  className={inputCls} placeholder="e.g. Benefits of remote work for small businesses" />
+              </Field>
+              <Field label="Target Audience">
+                <input type="text" value={forms.blog_post_outline.targetAudience}
+                  onChange={e => update('blog_post_outline', { targetAudience: e.target.value })}
+                  className={inputCls} placeholder="e.g. Small business owners, 30–50 years old" />
+              </Field>
+              <Field label="Article Scope">
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { value: 'short',  label: 'Overview',      hint: '~500 words' },
+                    { value: 'medium', label: 'Standard',      hint: '~1 000 words' },
+                    { value: 'long',   label: 'Comprehensive', hint: '~2 000 words' },
+                  ] as const).map(({ value, label, hint }) => (
+                    <button key={value} type="button" onClick={() => update('blog_post_outline', { desiredLength: value })}
+                      className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.blog_post_outline.desiredLength === value ? activeLengthCls : inactiveLengthCls}`}>
+                      <span className="block text-sm font-medium">{label}</span>
+                      <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            </>)}
+
+            {/* ── Email Composer ── */}
+            {contentType === 'email_composer' && (<>
+              <Field label="Company / Sender Name">
+                <input type="text" value={forms.email_composer.companyName}
+                  onChange={e => update('email_composer', { companyName: e.target.value })}
+                  className={inputCls} placeholder="e.g. Acme Corp" />
+              </Field>
+              <Field label="Email Purpose">
+                <input type="text" value={forms.email_composer.emailPurpose}
+                  onChange={e => update('email_composer', { emailPurpose: e.target.value })}
+                  className={inputCls} placeholder="e.g. Invite to a product demo" />
+              </Field>
+              <Field label="Style">
+                <div className="flex flex-wrap gap-1.5">
+                  {(['formal','friendly','persuasive','direct','empathetic'] as const).map(s => (
+                    <Chip key={s} label={s.charAt(0).toUpperCase() + s.slice(1)}
+                      active={forms.email_composer.emailStyle === s}
+                      onClick={() => update('email_composer', { emailStyle: s })} />
+                  ))}
+                </div>
+              </Field>
+              <Field label="Length">
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { value: 'brief',    label: 'Brief',    hint: '100–180 words' },
+                    { value: 'standard', label: 'Standard', hint: '200–350 words' },
+                    { value: 'detailed', label: 'Detailed', hint: '400–600 words' },
+                  ] as const).map(({ value, label, hint }) => (
+                    <button key={value} type="button" onClick={() => update('email_composer', { emailLength: value })}
+                      className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.email_composer.emailLength === value ? activeLengthCls : inactiveLengthCls}`}>
+                      <span className="block text-sm font-medium">{label}</span>
+                      <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+              <Field label="Key Points (Enter or comma to add)">
+                <TagInput tags={forms.email_composer.keyPoints}
+                  onChange={keyPoints => update('email_composer', { keyPoints })}
+                  placeholder="e.g. 20% discount, Friday deadline..." />
+              </Field>
+            </>)}
+
+            {/* ── Social Post ── */}
+            {contentType === 'social_media_caption' && (<>
+              <Field label="Platform">
+                <div className="flex flex-wrap gap-1.5">
+                  {([['instagram','Instagram'],['linkedin','LinkedIn'],['twitter','Twitter/X'],['facebook','Facebook']] as const).map(([v, l]) => (
+                    <Chip key={v} label={l}
+                      active={forms.social_media_caption.platform === v}
+                      onClick={() => update('social_media_caption', { platform: v })} />
+                  ))}
+                </div>
+              </Field>
+              <Field label="Topic">
+                <input type="text" value={forms.social_media_caption.topic}
+                  onChange={e => update('social_media_caption', { topic: e.target.value })}
+                  className={inputCls} placeholder="e.g. New product launch, company milestone" />
+              </Field>
+              <Field label="Tone">
+                <div className="flex gap-1.5">
+                  {(['professional','casual','fun'] as const).map(t => (
+                    <Chip key={t} label={t.charAt(0).toUpperCase() + t.slice(1)}
+                      active={forms.social_media_caption.tone === t}
+                      onClick={() => update('social_media_caption', { tone: t })} />
+                  ))}
+                </div>
+              </Field>
+              <Field label="Post Length">
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: 'micro',  label: 'Micro',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 140 chars' : 'up to 50 words' },
+                    { value: 'short',  label: 'Short',  hint: forms.social_media_caption.platform === 'twitter' ? 'up to 220 chars' : '60–90 words' },
+                    { value: 'medium', label: 'Medium', hint: forms.social_media_caption.platform === 'twitter' ? 'up to 280 chars' : '120–180 words' },
+                    { value: 'long',   label: 'Long',   hint: forms.social_media_caption.platform === 'twitter' ? '3–4 tweet thread' : '220–300 words' },
+                  ] as const).map(({ value, label, hint }) => (
+                    <button key={value} type="button" onClick={() => update('social_media_caption', { wordCount: value })}
+                      className={`px-3 py-2.5 rounded-lg border text-left transition ${forms.social_media_caption.wordCount === value ? activeLengthCls : inactiveLengthCls}`}>
+                      <span className="block text-sm font-medium">{label}</span>
+                      <span className="block text-xs text-[#a09890] mt-0.5">{hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            </>)}
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error === 'CREDIT_BALANCE_LOW' ? (
+                  <>API credit balance is too low.{' '}
+                    <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noreferrer" className="underline font-medium hover:text-red-800">
+                      Add credits →
+                    </a>
+                  </>
+                ) : error}
+              </div>
+            )}
+
+            {/* Generate */}
+            <button onClick={handleGenerate} disabled={loading || !canGenerate}
+              className="w-full bg-[#1b3f2d] hover:bg-[#152e24] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 text-sm">
+              {loading
+                ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating…</>
+                : 'Generate'}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Right: Result column (always visible) ── */}
+        <div className="lg:sticky lg:top-20">
+          {(result || loading) ? (
+            <ResultDisplay
+              result={result}
+              variants={variants}
+              loading={loading}
+              contentType={contentType}
+              inputs={forms[contentType] as ContentInputs}
+              onRegenerate={handleGenerate}
+              tokensUsed={tokensUsed}
+            />
+          ) : (
+            <div className="bg-white rounded-xl border border-[#e8e4db] shadow-[0_1px_8px_0_rgba(0,0,0,0.04)] min-h-[400px] flex flex-col items-center justify-center gap-3 p-8">
+              <div className="w-12 h-12 rounded-xl bg-[#f0ede6] flex items-center justify-center">
+                <Wand2 className="w-6 h-6 text-[#b0a89e]" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-[#3d3d35] mb-1">Ready to generate</p>
+                <p className="text-xs text-[#b0a89e] max-w-xs leading-relaxed">
+                  Fill in the form and click Generate —<br />your content streams here in real time
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
-
-      {(result || loading) && (
-        <ResultDisplay
-          result={result}
-          variants={variants}
-          loading={loading}
-          contentType={contentType}
-          inputs={forms[contentType] as ContentInputs}
-          onRegenerate={handleGenerate}
-          tokensUsed={tokensUsed}
-        />
-      )}
     </div>
   )
 }

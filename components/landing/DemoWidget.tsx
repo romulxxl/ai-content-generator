@@ -11,10 +11,10 @@ const TOKEN_MARKER = '\n\n__TOKENS__:'
 const ERROR_MARKER = '\n\n__ERROR__:'
 
 const TABS: { id: ContentType; label: string; demoNote: string }[] = [
-  { id: 'product_description',  label: 'Product',  demoNote: 'teaser length — sign up for all sizes' },
-  { id: 'blog_post_outline',    label: 'Blog',     demoNote: 'short outline — sign up for deep-dives up to 2 000 words' },
-  { id: 'email_composer',       label: 'Email',    demoNote: 'brief email — sign up for detailed campaigns' },
-  { id: 'social_media_caption', label: 'Social',   demoNote: 'short post — sign up for threads & long-form' },
+  { id: 'product_description',  label: 'Product',  demoNote: 'Teaser length — sign up for all sizes' },
+  { id: 'blog_post_outline',    label: 'Blog',     demoNote: 'Short outline — sign up for deep-dives' },
+  { id: 'email_composer',       label: 'Email',    demoNote: 'Brief email — sign up for detailed campaigns' },
+  { id: 'social_media_caption', label: 'Social',   demoNote: 'Short post — sign up for threads & long-form' },
 ]
 
 const PRODUCT_TEMPLATES = [
@@ -38,70 +38,40 @@ const SOCIAL_TEMPLATES = [
   { label: 'Hot Take',         platform: 'twitter',   topic: 'Why most productivity advice fails — and what actually works',       tone: 'casual' },
 ]
 
-// ── Shared chip component ───────────────────────────────────────────────────────
+const inputCls = 'w-full px-3 py-2 border border-[#e8e4db] rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/20 focus:border-[#1b3f2d] transition text-[#1c1c17] placeholder:text-[#b0a89e] disabled:opacity-50 disabled:cursor-not-allowed'
 
-function Chip({ label, active, onClick, disabled }: {
-  label: string; active: boolean; onClick: () => void; disabled?: boolean
-}) {
+function Label({ children }: { children: React.ReactNode }) {
+  return <label className="block text-[11px] font-semibold text-[#a09890] mb-1.5 uppercase tracking-wider">{children}</label>
+}
+
+function Chip({ label, active, onClick, disabled }: { label: string; active: boolean; onClick: () => void; disabled?: boolean }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
       className={`text-xs px-3 py-1.5 rounded-md border font-medium transition whitespace-nowrap ${
-        active
-          ? 'border-[#1b3f2d] bg-[#1b3f2d] text-white'
-          : 'border-[#e8e4db] bg-white text-[#6b6660] hover:border-[#1b3f2d] hover:text-[#1b3f2d]'
+        active ? 'border-[#1b3f2d] bg-[#1b3f2d] text-white' : 'border-[#e8e4db] text-[#6b6660] hover:border-[#1b3f2d] hover:text-[#1b3f2d]'
       } disabled:opacity-40 disabled:cursor-not-allowed`}>
       {label}
     </button>
   )
 }
 
-// ── Input ──────────────────────────────────────────────────────────────────────
-
-const inputCls = 'w-full px-3 py-2 border border-[#e8e4db] rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/30 focus:border-[#1b3f2d] transition disabled:opacity-50 disabled:cursor-not-allowed text-[#1c1c17] placeholder:text-[#b0a89e]'
-
-function Label({ children }: { children: React.ReactNode }) {
-  return <label className="block text-[11px] font-semibold text-[#a09890] mb-1.5 uppercase tracking-wider">{children}</label>
-}
-
-// ── Widget ─────────────────────────────────────────────────────────────────────
-
 export default function DemoWidget() {
   const [activeTab, setActiveTab] = useState<ContentType>('product_description')
 
-  const [productForm, setProductForm] = useState({
-    productName: PRODUCT_TEMPLATES[0].productName,
-    keyFeatures: PRODUCT_TEMPLATES[0].keyFeatures,
-    tone: PRODUCT_TEMPLATES[0].tone,
-  })
-  const [blogForm, setBlogForm] = useState({
-    topic: BLOG_TEMPLATES[0].topic,
-    targetAudience: BLOG_TEMPLATES[0].targetAudience,
-  })
-  const [emailForm, setEmailForm] = useState({
-    companyName: EMAIL_TEMPLATES[0].companyName,
-    emailPurpose: EMAIL_TEMPLATES[0].emailPurpose,
-    emailStyle: EMAIL_TEMPLATES[0].emailStyle,
-  })
-  const [socialForm, setSocialForm] = useState({
-    platform: SOCIAL_TEMPLATES[0].platform,
-    topic: SOCIAL_TEMPLATES[0].topic,
-    tone: SOCIAL_TEMPLATES[0].tone,
-  })
+  const [productForm, setProductForm] = useState({ productName: PRODUCT_TEMPLATES[0].productName, keyFeatures: PRODUCT_TEMPLATES[0].keyFeatures, tone: PRODUCT_TEMPLATES[0].tone })
+  const [blogForm,    setBlogForm]    = useState({ topic: BLOG_TEMPLATES[0].topic, targetAudience: BLOG_TEMPLATES[0].targetAudience })
+  const [emailForm,   setEmailForm]   = useState({ companyName: EMAIL_TEMPLATES[0].companyName, emailPurpose: EMAIL_TEMPLATES[0].emailPurpose, emailStyle: EMAIL_TEMPLATES[0].emailStyle })
+  const [socialForm,  setSocialForm]  = useState({ platform: SOCIAL_TEMPLATES[0].platform, topic: SOCIAL_TEMPLATES[0].topic, tone: SOCIAL_TEMPLATES[0].tone })
 
-  const [result, setResult] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [tokensUsed, setTokensUsed] = useState<number | null>(null)
-  const [remaining, setRemaining] = useState<number | null>(null)
-  const [limitReached, setLimitReached] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [result,      setResult]      = useState('')
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState<string | null>(null)
+  const [tokensUsed,  setTokensUsed]  = useState<number | null>(null)
+  const [remaining,   setRemaining]   = useState<number | null>(null)
+  const [limitReached,setLimitReached]= useState(false)
+  const [copied,      setCopied]      = useState(false)
 
-  const handleTabChange = (tab: ContentType) => {
-    setActiveTab(tab)
-    setResult('')
-    setError(null)
-    setTokensUsed(null)
-  }
+  const handleTabChange = (tab: ContentType) => { setActiveTab(tab); setResult(''); setError(null); setTokensUsed(null) }
 
   const getInputs = () => {
     switch (activeTab) {
@@ -123,61 +93,39 @@ export default function DemoWidget() {
 
   const handleGenerate = async () => {
     if (!canGenerate || loading) return
-    setLoading(true)
-    setError(null)
-    setResult('')
-    setTokensUsed(null)
-
+    setLoading(true); setError(null); setResult(''); setTokensUsed(null)
     try {
       const response = await fetch('/api/demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contentType: activeTab, inputs: getInputs() }),
       })
-
       if (response.status === 429) { setLimitReached(true); setRemaining(0); setLoading(false); return }
       if (!response.ok) {
         const d = await response.json().catch(() => ({}))
         throw new Error((d as { error?: string }).error || 'Request failed')
       }
-
       setRemaining(Number(response.headers.get('X-Demo-Remaining') ?? DEMO_LIMIT - 1))
-
       const reader = response.body!.getReader()
       const decoder = new TextDecoder()
       let accumulated = ''
-
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
         accumulated += decoder.decode(value, { stream: true })
-
         const tIdx = accumulated.lastIndexOf(TOKEN_MARKER)
-        if (tIdx !== -1) {
-          const n = parseInt(accumulated.slice(tIdx + TOKEN_MARKER.length), 10)
-          if (!isNaN(n)) setTokensUsed(n)
-          setResult(accumulated.slice(0, tIdx))
-          break
-        }
+        if (tIdx !== -1) { const n = parseInt(accumulated.slice(tIdx + TOKEN_MARKER.length), 10); if (!isNaN(n)) setTokensUsed(n); setResult(accumulated.slice(0, tIdx)); break }
         const eIdx = accumulated.lastIndexOf(ERROR_MARKER)
-        if (eIdx !== -1) {
-          setError(accumulated.slice(eIdx + ERROR_MARKER.length).trim() || 'Generation failed')
-          setResult('')
-          break
-        }
+        if (eIdx !== -1) { setError(accumulated.slice(eIdx + ERROR_MARKER.length).trim() || 'Generation failed'); setResult(''); break }
         setResult(accumulated)
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed')
-    } finally {
-      setLoading(false)
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Generation failed') }
+    finally { setLoading(false) }
   }
 
   const handleCopy = async () => {
     if (!result) return
-    try { await navigator.clipboard.writeText(result); setCopied(true); setTimeout(() => setCopied(false), 1500) }
-    catch { /* ignore */ }
+    try { await navigator.clipboard.writeText(result); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ }
   }
 
   const displayRemaining = remaining !== null ? remaining : DEMO_LIMIT
@@ -186,7 +134,7 @@ export default function DemoWidget() {
   return (
     <div className="bg-white rounded-2xl border border-[#e8e4db] shadow-[0_2px_16px_0_rgba(0,0,0,0.06)] overflow-hidden w-full text-left">
 
-      {/* Tab nav */}
+      {/* ── Content-type tabs + counter ── */}
       <div className="flex border-b border-[#e8e4db]">
         {TABS.map(tab => (
           <button key={tab.id} onClick={() => handleTabChange(tab.id)}
@@ -198,184 +146,155 @@ export default function DemoWidget() {
             {tab.label}
           </button>
         ))}
-        <div className={`flex items-center px-4 text-xs font-medium shrink-0 ${
+        <div className={`flex items-center px-4 text-xs font-medium shrink-0 border-b-2 border-transparent ${
           limitReached ? 'text-red-500' : displayRemaining <= 1 ? 'text-amber-600' : 'text-[#6faa84]'
         }`}>
           {limitReached ? 'Limit reached' : `${displayRemaining} left`}
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#e8e4db]">
+      {/* ── Form ── */}
+      <div className="p-5 space-y-4">
 
-        {/* ── Left: Input ── */}
-        <div className="p-5 space-y-4">
-
-          {/* Product Description */}
-          {activeTab === 'product_description' && (
-            <>
-              <div>
-                <Label>Quick start</Label>
-                <div className="flex gap-2 flex-wrap">
-                  {PRODUCT_TEMPLATES.map(t => (
-                    <Chip key={t.label} label={t.label} active={productForm.productName === t.productName}
-                      onClick={() => { setProductForm({ productName: t.productName, keyFeatures: t.keyFeatures, tone: t.tone }); setResult(''); setError(null) }}
-                      disabled={limitReached} />
-                  ))}
-                </div>
+        {/* Product Description */}
+        {activeTab === 'product_description' && (<>
+          <div>
+            <Label>Quick start</Label>
+            <div className="flex gap-2 flex-wrap">
+              {PRODUCT_TEMPLATES.map(t => (
+                <Chip key={t.label} label={t.label} active={productForm.productName === t.productName} disabled={limitReached}
+                  onClick={() => { setProductForm({ productName: t.productName, keyFeatures: t.keyFeatures, tone: t.tone }); setResult(''); setError(null) }} />
+              ))}
+            </div>
+          </div>
+          <div><Label>Product name</Label>
+            <input value={productForm.productName} onChange={e => setProductForm(f => ({ ...f, productName: e.target.value }))}
+              placeholder="e.g. iPhone 15 Pro" maxLength={100} disabled={limitReached} className={inputCls} />
+          </div>
+          {productForm.keyFeatures.length > 0 && (
+            <div><Label>Key features</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {productForm.keyFeatures.map(f => <span key={f} className="text-xs bg-[#f0ede6] text-[#6b6660] px-2.5 py-1 rounded-md">{f}</span>)}
               </div>
-              <div>
-                <Label>Product name</Label>
-                <input value={productForm.productName} onChange={e => setProductForm(f => ({ ...f, productName: e.target.value }))}
-                  placeholder="e.g. iPhone 15 Pro" maxLength={100} disabled={limitReached} className={inputCls} />
-              </div>
-              {productForm.keyFeatures.length > 0 && (
-                <div>
-                  <Label>Key features</Label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {productForm.keyFeatures.map(f => (
-                      <span key={f} className="text-xs bg-[#f0ede6] text-[#6b6660] px-2.5 py-1 rounded-md">{f}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div>
-                <Label>Tone</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {['formal','casual','playful','authoritative','urgent','empathetic','minimalist'].map(t => (
-                    <Chip key={t} label={t.charAt(0).toUpperCase() + t.slice(1)} active={productForm.tone === t}
-                      onClick={() => setProductForm(f => ({ ...f, tone: t }))} disabled={limitReached} />
-                  ))}
-                </div>
-              </div>
-            </>
+            </div>
           )}
+          <div><Label>Tone</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {['formal','casual','playful','authoritative','urgent','empathetic','minimalist'].map(t => (
+                <Chip key={t} label={t.charAt(0).toUpperCase() + t.slice(1)} active={productForm.tone === t} disabled={limitReached}
+                  onClick={() => setProductForm(f => ({ ...f, tone: t }))} />
+              ))}
+            </div>
+          </div>
+        </>)}
 
-          {/* Blog Blueprint */}
-          {activeTab === 'blog_post_outline' && (
-            <>
-              <div>
-                <Label>Quick start</Label>
-                <div className="flex flex-wrap gap-2">
-                  {BLOG_TEMPLATES.map(t => (
-                    <Chip key={t.label} label={t.label} active={blogForm.topic === t.topic}
-                      onClick={() => { setBlogForm({ topic: t.topic, targetAudience: t.targetAudience }); setResult(''); setError(null) }}
-                      disabled={limitReached} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label>Topic</Label>
-                <input value={blogForm.topic} onChange={e => setBlogForm(f => ({ ...f, topic: e.target.value }))}
-                  placeholder="e.g. How to build a morning routine" maxLength={200} disabled={limitReached} className={inputCls} />
-              </div>
-              <div>
-                <Label>Target audience</Label>
-                <input value={blogForm.targetAudience} onChange={e => setBlogForm(f => ({ ...f, targetAudience: e.target.value }))}
-                  placeholder="e.g. Remote workers, 25–40" maxLength={100} disabled={limitReached} className={inputCls} />
-              </div>
-            </>
-          )}
+        {/* Blog Blueprint */}
+        {activeTab === 'blog_post_outline' && (<>
+          <div><Label>Quick start</Label>
+            <div className="flex flex-wrap gap-2">
+              {BLOG_TEMPLATES.map(t => (
+                <Chip key={t.label} label={t.label} active={blogForm.topic === t.topic} disabled={limitReached}
+                  onClick={() => { setBlogForm({ topic: t.topic, targetAudience: t.targetAudience }); setResult(''); setError(null) }} />
+              ))}
+            </div>
+          </div>
+          <div><Label>Topic</Label>
+            <input value={blogForm.topic} onChange={e => setBlogForm(f => ({ ...f, topic: e.target.value }))}
+              placeholder="e.g. How to build a morning routine" maxLength={200} disabled={limitReached} className={inputCls} />
+          </div>
+          <div><Label>Target audience</Label>
+            <input value={blogForm.targetAudience} onChange={e => setBlogForm(f => ({ ...f, targetAudience: e.target.value }))}
+              placeholder="e.g. Remote workers, 25–40" maxLength={100} disabled={limitReached} className={inputCls} />
+          </div>
+        </>)}
 
-          {/* Email Composer */}
-          {activeTab === 'email_composer' && (
-            <>
-              <div>
-                <Label>Quick start</Label>
-                <div className="flex flex-wrap gap-2">
-                  {EMAIL_TEMPLATES.map(t => (
-                    <Chip key={t.label} label={t.label} active={emailForm.emailPurpose === t.emailPurpose}
-                      onClick={() => { setEmailForm({ companyName: t.companyName, emailPurpose: t.emailPurpose, emailStyle: t.emailStyle }); setResult(''); setError(null) }}
-                      disabled={limitReached} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label>Company / Sender</Label>
-                <input value={emailForm.companyName} onChange={e => setEmailForm(f => ({ ...f, companyName: e.target.value }))}
-                  placeholder="e.g. Acme Corp" maxLength={100} disabled={limitReached} className={inputCls} />
-              </div>
-              <div>
-                <Label>Email purpose</Label>
-                <input value={emailForm.emailPurpose} onChange={e => setEmailForm(f => ({ ...f, emailPurpose: e.target.value }))}
-                  placeholder="e.g. Invite to a product demo" maxLength={200} disabled={limitReached} className={inputCls} />
-              </div>
-              <div>
-                <Label>Style</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {['formal','friendly','persuasive','direct','empathetic'].map(s => (
-                    <Chip key={s} label={s.charAt(0).toUpperCase() + s.slice(1)} active={emailForm.emailStyle === s}
-                      onClick={() => setEmailForm(f => ({ ...f, emailStyle: s }))} disabled={limitReached} />
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+        {/* Email Composer */}
+        {activeTab === 'email_composer' && (<>
+          <div><Label>Quick start</Label>
+            <div className="flex flex-wrap gap-2">
+              {EMAIL_TEMPLATES.map(t => (
+                <Chip key={t.label} label={t.label} active={emailForm.emailPurpose === t.emailPurpose} disabled={limitReached}
+                  onClick={() => { setEmailForm({ companyName: t.companyName, emailPurpose: t.emailPurpose, emailStyle: t.emailStyle }); setResult(''); setError(null) }} />
+              ))}
+            </div>
+          </div>
+          <div><Label>Company / Sender</Label>
+            <input value={emailForm.companyName} onChange={e => setEmailForm(f => ({ ...f, companyName: e.target.value }))}
+              placeholder="e.g. Acme Corp" maxLength={100} disabled={limitReached} className={inputCls} />
+          </div>
+          <div><Label>Email purpose</Label>
+            <input value={emailForm.emailPurpose} onChange={e => setEmailForm(f => ({ ...f, emailPurpose: e.target.value }))}
+              placeholder="e.g. Invite to a product demo" maxLength={200} disabled={limitReached} className={inputCls} />
+          </div>
+          <div><Label>Style</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {['formal','friendly','persuasive','direct','empathetic'].map(s => (
+                <Chip key={s} label={s.charAt(0).toUpperCase() + s.slice(1)} active={emailForm.emailStyle === s} disabled={limitReached}
+                  onClick={() => setEmailForm(f => ({ ...f, emailStyle: s }))} />
+              ))}
+            </div>
+          </div>
+        </>)}
 
-          {/* Social Post */}
-          {activeTab === 'social_media_caption' && (
-            <>
-              <div>
-                <Label>Quick start</Label>
-                <div className="flex flex-wrap gap-2">
-                  {SOCIAL_TEMPLATES.map(t => (
-                    <Chip key={t.label} label={t.label} active={socialForm.topic === t.topic}
-                      onClick={() => { setSocialForm({ platform: t.platform, topic: t.topic, tone: t.tone }); setResult(''); setError(null) }}
-                      disabled={limitReached} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label>Platform</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {[['instagram','Instagram'],['linkedin','LinkedIn'],['twitter','Twitter/X'],['facebook','Facebook']].map(([v, l]) => (
-                    <Chip key={v} label={l} active={socialForm.platform === v}
-                      onClick={() => setSocialForm(f => ({ ...f, platform: v }))} disabled={limitReached} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label>Topic</Label>
-                <input value={socialForm.topic} onChange={e => setSocialForm(f => ({ ...f, topic: e.target.value }))}
-                  placeholder="e.g. New product launch" maxLength={200} disabled={limitReached} className={inputCls} />
-              </div>
-              <div>
-                <Label>Tone</Label>
-                <div className="flex gap-1.5">
-                  {['professional','casual','fun'].map(t => (
-                    <Chip key={t} label={t.charAt(0).toUpperCase() + t.slice(1)} active={socialForm.tone === t}
-                      onClick={() => setSocialForm(f => ({ ...f, tone: t }))} disabled={limitReached} />
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+        {/* Social Post */}
+        {activeTab === 'social_media_caption' && (<>
+          <div><Label>Quick start</Label>
+            <div className="flex flex-wrap gap-2">
+              {SOCIAL_TEMPLATES.map(t => (
+                <Chip key={t.label} label={t.label} active={socialForm.topic === t.topic} disabled={limitReached}
+                  onClick={() => { setSocialForm({ platform: t.platform, topic: t.topic, tone: t.tone }); setResult(''); setError(null) }} />
+              ))}
+            </div>
+          </div>
+          <div><Label>Platform</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {[['instagram','Instagram'],['linkedin','LinkedIn'],['twitter','Twitter/X'],['facebook','Facebook']].map(([v, l]) => (
+                <Chip key={v} label={l} active={socialForm.platform === v} disabled={limitReached}
+                  onClick={() => setSocialForm(f => ({ ...f, platform: v }))} />
+              ))}
+            </div>
+          </div>
+          <div><Label>Topic</Label>
+            <input value={socialForm.topic} onChange={e => setSocialForm(f => ({ ...f, topic: e.target.value }))}
+              placeholder="e.g. New product launch" maxLength={200} disabled={limitReached} className={inputCls} />
+          </div>
+          <div><Label>Tone</Label>
+            <div className="flex gap-1.5">
+              {['professional','casual','fun'].map(t => (
+                <Chip key={t} label={t.charAt(0).toUpperCase() + t.slice(1)} active={socialForm.tone === t} disabled={limitReached}
+                  onClick={() => setSocialForm(f => ({ ...f, tone: t }))} />
+              ))}
+            </div>
+          </div>
+        </>)}
 
-          {/* Demo scope note */}
-          <p className="text-[11px] text-[#b0a89e] pt-1">{activeTabMeta.demoNote}</p>
+        {/* Demo note */}
+        <p className="text-[11px] text-[#b0a89e]">{activeTabMeta.demoNote}</p>
 
-          {/* Generate */}
-          {!limitReached ? (
-            <button onClick={handleGenerate} disabled={loading || !canGenerate}
-              className="w-full bg-[#1b3f2d] hover:bg-[#152e24] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 text-sm">
-              {loading
-                ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating…</>
-                : <><Zap className="w-4 h-4" />Generate</>}
-            </button>
-          ) : (
-            <a href="/signup"
-              className="w-full flex items-center justify-center gap-2 bg-[#1b3f2d] hover:bg-[#152e24] text-white font-semibold py-2.5 px-4 rounded-lg transition text-sm">
-              Create free account <ArrowRight className="w-4 h-4" />
-            </a>
-          )}
+        {/* Generate / Limit CTA */}
+        {!limitReached ? (
+          <button onClick={handleGenerate} disabled={loading || !canGenerate}
+            className="w-full bg-[#1b3f2d] hover:bg-[#152e24] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 text-sm">
+            {loading
+              ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating…</>
+              : <><Zap className="w-4 h-4" />Generate</>}
+          </button>
+        ) : (
+          <a href="/signup"
+            className="w-full flex items-center justify-center gap-2 bg-[#1b3f2d] hover:bg-[#152e24] text-white font-semibold py-2.5 px-4 rounded-lg transition text-sm">
+            Create free account <ArrowRight className="w-4 h-4" />
+          </a>
+        )}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
-          )}
-        </div>
+        {/* Error */}
+        {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>}
+      </div>
 
-        {/* ── Right: Output ── */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-[#e8e4db] bg-[#faf8f3]/60">
+      {/* ── Output (appears below form during + after generation) ── */}
+      {(loading || result) && (
+        <div className="border-t border-[#e8e4db]">
+          {/* Output header */}
+          <div className="flex items-center justify-between px-5 py-3 bg-[#faf8f3]/70 border-b border-[#eeebe3]">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#a09890]">Output</span>
             <div className="flex items-center gap-3">
               {tokensUsed !== null && (
@@ -384,35 +303,21 @@ export default function DemoWidget() {
                 </span>
               )}
               {result && !loading && (
-                <button onClick={handleCopy}
-                  className="flex items-center gap-1 text-[11px] text-[#a09890] hover:text-[#1c1c17] transition">
+                <button onClick={handleCopy} className="flex items-center gap-1 text-[11px] text-[#a09890] hover:text-[#1c1c17] transition">
                   {copied ? <CheckCircle className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copied' : 'Copy'}
                 </button>
               )}
               {result && !loading && !limitReached && (
-                <button onClick={handleGenerate}
-                  className="flex items-center gap-1 text-[11px] text-[#a09890] hover:text-[#1c1c17] transition">
+                <button onClick={handleGenerate} className="flex items-center gap-1 text-[11px] text-[#a09890] hover:text-[#1c1c17] transition">
                   <RefreshCw className="w-3.5 h-3.5" />Retry
                 </button>
               )}
             </div>
           </div>
 
-          <div className="flex-1 p-5 min-h-[240px]">
-            {/* Idle: empty state */}
-            {!result && !loading && (
-              <div className="h-full flex flex-col items-center justify-center gap-3 min-h-[200px]">
-                <div className="w-10 h-10 rounded-xl bg-[#f0ede6] flex items-center justify-center">
-                  <Wand2 className="w-5 h-5 text-[#b0a89e]" />
-                </div>
-                <p className="text-xs text-[#b0a89e] text-center leading-relaxed">
-                  Your content streams here<br />in real time
-                </p>
-              </div>
-            )}
-
-            {/* Generating: skeleton bars */}
+          {/* Content */}
+          <div className="p-5">
             {loading && !result && (
               <div className="space-y-2.5">
                 {[100, 83, 62, 100, 71].map((w, i) => (
@@ -424,29 +329,25 @@ export default function DemoWidget() {
                 </div>
               </div>
             )}
-
-            {/* Result streaming or complete */}
             {result && (
               <div>
                 <MarkdownContent content={result} />
-                {loading && (
-                  <span className="inline-block w-2 h-4 bg-[#1b3f2d] animate-pulse ml-0.5 align-text-bottom rounded-sm" />
-                )}
+                {loading && <span className="inline-block w-2 h-4 bg-[#1b3f2d] animate-pulse ml-0.5 align-text-bottom rounded-sm" />}
               </div>
             )}
           </div>
-
-          {result && !loading && !limitReached && (
-            <div className="px-5 py-3 border-t border-[#e8e4db] bg-[#faf8f3]/60 flex items-center justify-between">
-              <span className="text-[11px] text-[#a09890]">History, versions & full access →</span>
-              <a href="/signup" className="text-[11px] font-semibold text-[#1b3f2d] hover:underline flex items-center gap-1">
-                Sign up free <ArrowRight className="w-3 h-3" />
-              </a>
-            </div>
-          )}
         </div>
+      )}
 
-      </div>
+      {/* ── Post-result sign-up nudge ── */}
+      {result && !loading && !limitReached && (
+        <div className="flex items-center justify-between border-t border-[#e8e4db] px-5 py-3">
+          <span className="text-[11px] text-[#a09890]">History, versions, longer outputs in full app</span>
+          <a href="/signup" className="text-[11px] font-semibold text-[#1b3f2d] hover:underline flex items-center gap-1">
+            Sign up free <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
+      )}
     </div>
   )
 }
