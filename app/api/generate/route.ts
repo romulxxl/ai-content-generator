@@ -34,9 +34,6 @@ function sanitizeInputs(inputs: unknown): ContentInputs {
   return sanitized as unknown as ContentInputs
 }
 
-const TOKEN_MARKER = '\n\n__TOKENS__:'
-const ERROR_MARKER = '\n\n__ERROR__:'
-
 export async function POST(request: Request) {
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
@@ -92,7 +89,7 @@ export async function POST(request: Request) {
     const anthropic = createAnthropic({ apiKey })
     const prompt = buildPrompt(contentType, inputs)
 
-    const streamResult = streamText({
+    const result = streamText({
       model: anthropic('claude-sonnet-4-6'),
       system:
         'You are a professional content writer. Use Markdown formatting where it adds clarity: ' +
@@ -102,36 +99,19 @@ export async function POST(request: Request) {
         'prioritise readability over markup. Always match the language of the user\'s request.',
       messages: [{ role: 'user', content: prompt }],
       maxOutputTokens: maxTokens,
-    })
-
-    const encoder = new TextEncoder()
-    const body = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of streamResult.textStream) {
-            controller.enqueue(encoder.encode(chunk))
-          }
-          const usage = await streamResult.usage
-          const tokens = (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0)
-          if (tokens > 0) {
-            controller.enqueue(encoder.encode(TOKEN_MARKER + tokens))
-            db.rpc('increment_user_usage', { p_user_id: userId, p_tokens: tokens })
-              .then(({ error: rpcErr }) => {
-                if (rpcErr) console.error('[generate] usage tracking failed:', rpcErr.message)
-              })
-          }
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : 'Generation error'
-          controller.enqueue(encoder.encode(ERROR_MARKER + msg))
-        } finally {
-          controller.close()
+      onFinish: ({ usage }) => {
+        const tokens = (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0)
+        if (tokens > 0) {
+          db.rpc('increment_user_usage', { p_user_id: userId, p_tokens: tokens })
+            .then(({ error: rpcErr }) => {
+              if (rpcErr) console.error('[generate] usage tracking failed:', rpcErr.message)
+            })
         }
       },
     })
 
-    return new Response(body, {
+    return result.toTextStreamResponse({
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache, no-store, no-transform',
         'X-Content-Type-Options': 'nosniff',
         'X-Accel-Buffering': 'no',

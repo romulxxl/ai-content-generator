@@ -8,8 +8,6 @@ import MarkdownContent from '@/components/shared/MarkdownContent'
 type ContentType = 'product_description' | 'blog_post_outline' | 'email_composer' | 'social_media_caption'
 
 const DEMO_LIMIT = 3
-const TOKEN_MARKER = '\n\n__TOKENS__:'
-const ERROR_MARKER = '\n\n__ERROR__:'
 
 const TABS: { id: ContentType; label: string; demoNote: string }[] = [
   { id: 'product_description',  label: 'Product',  demoNote: 'Teaser length — sign up for all sizes' },
@@ -114,10 +112,6 @@ export default function DemoWidget() {
         const { done, value } = await reader.read()
         if (done) break
         accumulated += decoder.decode(value, { stream: true })
-        const tIdx = accumulated.lastIndexOf(TOKEN_MARKER)
-        if (tIdx !== -1) { const n = parseInt(accumulated.slice(tIdx + TOKEN_MARKER.length), 10); if (!isNaN(n)) setTokensUsed(n); setResult(accumulated.slice(0, tIdx)); break }
-        const eIdx = accumulated.lastIndexOf(ERROR_MARKER)
-        if (eIdx !== -1) { setError(accumulated.slice(eIdx + ERROR_MARKER.length).trim() || 'Generation failed'); setResult(''); break }
         flushSync(() => setResult(accumulated))
       }
     } catch (err) { setError(err instanceof Error ? err.message : 'Generation failed') }

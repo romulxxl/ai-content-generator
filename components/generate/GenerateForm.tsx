@@ -35,9 +35,6 @@ const initialForms: AllForms = {
   social_media_caption: { platform: 'instagram', topic: '', tone: 'casual', wordCount: 'short' },
 }
 
-const TOKEN_MARKER = '\n\n__TOKENS__:'
-const ERROR_MARKER = '\n\n__ERROR__:'
-
 const inputCls = 'w-full px-4 py-2.5 border border-[#e8e4db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3f2d]/20 focus:border-[#1b3f2d] transition bg-white text-[#1c1c17] placeholder:text-[#b0a89e]'
 
 const activeLengthCls   = 'border-[#1b3f2d] bg-[#f0f7f3] text-[#1b3f2d]'
@@ -118,18 +115,6 @@ export default function GenerateForm() {
         const { done, value } = await reader.read()
         if (done) break
         accumulated += decoder.decode(value, { stream: true })
-        const tIdx = accumulated.lastIndexOf(TOKEN_MARKER)
-        if (tIdx !== -1) {
-          const n = parseInt(accumulated.slice(tIdx + TOKEN_MARKER.length), 10)
-          if (!isNaN(n)) setTokensUsed(n)
-          setResult(accumulated.slice(0, tIdx)); break
-        }
-        const eIdx = accumulated.lastIndexOf(ERROR_MARKER)
-        if (eIdx !== -1) {
-          const msg = accumulated.slice(eIdx + ERROR_MARKER.length).trim()
-          setError(msg.includes('credit balance') || msg.includes('insufficient') ? 'CREDIT_BALANCE_LOW' : (msg || 'Generation failed'))
-          setResult(accumulated.slice(0, eIdx) || ''); break
-        }
         flushSync(() => setResult(accumulated))
       }
     } catch (err) {

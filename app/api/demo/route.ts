@@ -8,8 +8,6 @@ export const runtime = 'nodejs'
 export const maxDuration = 30
 
 const DEMO_LIMIT = 3
-const TOKEN_MARKER = '\n\n__TOKENS__:'
-const ERROR_MARKER = '\n\n__ERROR__:'
 
 const DEMO_MAX_TOKENS: Record<ContentType, number> = {
   product_description:  150,
@@ -139,7 +137,7 @@ export async function POST(request: Request) {
     const maxTokens = DEMO_MAX_TOKENS[contentType]
 
     const anthropic = createAnthropic({ apiKey })
-    const streamResult = streamText({
+    const result = streamText({
       model: anthropic('claude-haiku-4-5-20251001'),
       system:
         'You are a professional content writer. Use Markdown formatting where it adds clarity: ' +
@@ -149,28 +147,8 @@ export async function POST(request: Request) {
       maxOutputTokens: maxTokens,
     })
 
-    const encoder = new TextEncoder()
-    const responseBody = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of streamResult.textStream) {
-            controller.enqueue(encoder.encode(chunk))
-          }
-          const usage = await streamResult.usage
-          const tokens = (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0)
-          controller.enqueue(encoder.encode(TOKEN_MARKER + tokens))
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : 'Generation error'
-          controller.enqueue(encoder.encode(ERROR_MARKER + msg))
-        } finally {
-          controller.close()
-        }
-      },
-    })
-
-    return new Response(responseBody, {
+    return result.toTextStreamResponse({
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache, no-store, no-transform',
         'X-Accel-Buffering': 'no',
         'X-Demo-Remaining': String(remaining),
