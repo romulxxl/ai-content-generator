@@ -39,7 +39,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100">
+      <header className="sticky top-0 z-50 bg-white/[0.97] backdrop-blur-md border-b border-slate-200/80 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center">
@@ -73,7 +73,7 @@ export default async function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 text-center">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-12 text-center scroll-mt-14">
         <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-700 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
           Powered by Claude AI · No signup to try
@@ -101,7 +101,7 @@ export default async function HomePage() {
       </div>
 
       {/* Features */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 scroll-mt-14">
         <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">
           Four content types, one tool
         </h2>
