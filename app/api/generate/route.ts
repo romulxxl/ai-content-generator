@@ -38,15 +38,16 @@ export async function POST(request: Request) {
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
-      return Response.json({ error: 'Server configuration error: ANTHROPIC_API_KEY is not set.' }, { status: 500 })
+      console.error('[generate] ANTHROPIC_API_KEY is not set')
+      return Response.json({ error: 'Service unavailable' }, { status: 503 })
     }
 
     let supabase
     try {
       supabase = createClient()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      return Response.json({ error: 'Auth service unavailable: ' + msg }, { status: 503 })
+      console.error('[generate] auth client init failed:', err instanceof Error ? err.message : err)
+      return Response.json({ error: 'Auth service unavailable' }, { status: 503 })
     }
 
     let user
@@ -119,7 +120,6 @@ export async function POST(request: Request) {
     })
   } catch (err) {
     console.error('[generate] error:', err instanceof Error ? err.message : err)
-    const msg = err instanceof Error ? err.message : 'Unexpected server error'
-    return Response.json({ error: msg }, { status: 500 })
+    return Response.json({ error: 'Unexpected server error' }, { status: 500 })
   }
 }

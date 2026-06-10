@@ -31,7 +31,8 @@ export async function GET(request: Request) {
     .range(offset, offset + limit - 1)
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 500 })
+    console.error('[history:GET] db error:', error.message)
+    return Response.json({ error: 'Failed to load history' }, { status: 500 })
   }
 
   return Response.json({ data: data ?? [], total: count ?? 0 })
@@ -85,7 +86,8 @@ export async function POST(request: Request) {
     .single()
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 500 })
+    console.error('[history:POST] db error:', error.message)
+    return Response.json({ error: 'Failed to save generation' }, { status: 500 })
   }
 
   return Response.json(data, { status: 201 })

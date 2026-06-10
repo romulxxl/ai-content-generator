@@ -20,7 +20,8 @@ export async function DELETE(
     .eq('user_id', user.id)
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 500 })
+    console.error('[history:DELETE] db error:', error.message)
+    return Response.json({ error: 'Failed to delete generation' }, { status: 500 })
   }
 
   return new Response(null, { status: 204 })

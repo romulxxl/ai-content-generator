@@ -5,7 +5,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/generate'
+  const rawNext = searchParams.get('next') ?? ''
+  // Allow only simple relative paths to prevent open-redirect attempts
+  const next = /^\/[a-zA-Z0-9\-/_]*$/.test(rawNext) ? rawNext : '/generate'
 
   if (code) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

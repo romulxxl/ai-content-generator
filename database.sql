@@ -30,5 +30,23 @@ create policy "Users can delete their own generations"
   on public.generations for delete
   using (auth.uid() = user_id);
 
+alter table public.generations
+  add column if not exists tokens_used integer;
+
+create policy "Users can update their own generations"
+  on public.generations for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 create index if not exists generations_user_id_created_at_idx
   on public.generations (user_id, created_at desc);
+
+-- Demo rate-limiting table (insert-only via public API, no RLS needed)
+create table if not exists public.demo_requests (
+  id         bigint primary key generated always as identity,
+  ip         text not null,
+  created_at timestamptz default now() not null
+);
+
+create index if not exists demo_requests_ip_created_at_idx
+  on public.demo_requests (ip, created_at desc);
